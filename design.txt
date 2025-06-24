@@ -1,0 +1,34 @@
+Lets design a streamlit app.
+
+
+How many tabs?
+    - Add new words
+        * this tab would provide an interface for the user to add new words to the db.
+           the user provided words will be sent to Gemini for content generation
+           and will be saved to the db.
+    - The learning experience
+        * This tab would let user to browse the learning content, add personal example,
+           and additional media associated with the word.
+    - SRS
+        * This tab is where we use spaced repetition to try to recall the learned
+           words.
+    - Database
+        * A view into the database and its tables.
+
+
+Parameters
+    - chunk_size_gemini_new_entries_int
+    - db_file_path
+    -
+
+state variables:
+    * words_already_in_db_list
+    
+    - Add new words tab
+        * new_words_to_generate_list
+        * llm_is_busy_bool
+        * generated_entries_chunk_cc (cc: custom class, in this case AnalysisResult)
+
+
+flash_denken/
+|--
