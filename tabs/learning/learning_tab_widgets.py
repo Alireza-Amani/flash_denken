@@ -246,8 +246,10 @@ def save_user_thought_callback():
         internal_monologue=st.session_state["user_thought_internal_monologue"],
         expression=st.session_state["user_thought_expression"],
     )
+    idx = st.session_state.get("current_word_idx_to_learn", 0)
+    word_id = st.session_state["word_ids_to_learn_list"][idx]
     save_user_thought_scenario(
-        st.session_state["current_word_id_to_learn"], thought_scenario)
+        word_id, thought_scenario)
     st.session_state["thought_scenario_created"] = True
     user_thought_input_cleanup()
 
@@ -281,10 +283,10 @@ def mark_word_learned_button():
     """Renders a button to mark the current word as learned."""
     is_disabled = (
         not st.session_state.get("start_learning_session", False) or
-        st.session_state.get("current_word_is_learned", False) or
-        not st.session_state.get("thought_scenario_created", False) or
-        not st.session_state.get("image_added", False) or
-        not st.session_state.get("video_added", False)
+        st.session_state.get("current_word_is_learned", False)  # or
+        # not st.session_state.get("thought_scenario_created", False) or
+        # not st.session_state.get("image_added", False) or
+        # not st.session_state.get("video_added", False)
     )
     st.button(
         "Markeer woord als geleerd",

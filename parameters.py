@@ -38,6 +38,9 @@ class Parameters:
     # image resize coefficient
     image_resize_coefficient: float = 0.8
 
+    # datetime format for storing in the database
+    datetime_format: str = "%Y-%m-%d %H:%M:%S"
+
     def __post_init__(self):
         # Ensure the file exists
         if not self.db_path.exists():

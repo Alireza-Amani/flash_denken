@@ -10,11 +10,13 @@ def render_db_status_tab():
     show_dataframes_button_db_status_tab()
 
     if st.session_state.get("trigger_show_dataframes", False):
-        words_df, practice_df = get_words_practice_tables()
+        words_df, practice_df, recall_prompts_df = get_words_practice_tables()
         st.write("Words DataFrame:")
         st.dataframe(words_df)
         st.write("Practice Sessions DataFrame:")
         st.dataframe(practice_df)
+        st.write("Recall Prompts DataFrame:")
+        st.dataframe(recall_prompts_df)
     else:
         st.write("Klik op de knop hieronder om de dataframes te tonen.")
 

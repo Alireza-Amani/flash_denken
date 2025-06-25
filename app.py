@@ -6,6 +6,7 @@ from tabs.add_words.add_words_tab import render_add_words_tab
 from tabs.db_status.db_status_tab import render_db_status_tab
 from tabs.explore_words.explore_words_tab import render_explore_words_tab
 from tabs.learning.learning_tab import render_learning_tab
+from tabs.recall.recall_tab import render_recall_tab
 
 # configure the page
 st.set_page_config(
@@ -17,7 +18,9 @@ st.set_page_config(
 # initialize the state variables
 initialize_state()
 
-tabs = st.tabs(["Woorden Toevoegen", "Leersessie",
+# recall in dutch is "herinnering"
+
+tabs = st.tabs(["Woorden Toevoegen", "Leersessie", "Herinnering",
                "Woorden Ontdekken", "Databasestatus"])
 
 with tabs[0]:
@@ -28,10 +31,11 @@ with tabs[1]:
     render_learning_tab()
 
 with tabs[2]:
-    render_explore_words_tab()
+    render_recall_tab()
 
 with tabs[3]:
+    st.header("Ontdek nieuwe woorden")
+    render_explore_words_tab()
+
+with tabs[4]:
     render_db_status_tab()
-
-
-# do something about the Vergelijkingen part, make sure the model produces something, use synonyms, etc. 

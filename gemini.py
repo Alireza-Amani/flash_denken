@@ -58,15 +58,21 @@ def generate_word_analysis(word_list: list[str]) -> AnalysisResult:
 
     for chunk in chunk_generator:
         prompt = ", ".join(chunk)
-        response = client.models.generate_content(
-            model=st.session_state["parameters"].gemini_model_name,
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": AnalysisResult,
-                "system_instruction": st.session_state["parameters"].word_analysis_instruction,
-            },
-        )
+        try:
+            response = client.models.generate_content(
+                model=st.session_state["parameters"].gemini_model_name,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": AnalysisResult,
+                    "system_instruction": st.session_state["parameters"].word_analysis_instruction,
+                },
+            )
+        except Exception as e:
+            print(
+                f"Er is een fout opgetreden bij het genereren van de analyses: {e}"
+            )
+            return AnalysisResult(analyses=[])
 
         parsed_response = response.parsed
         print("we are inside generate_word_analysis")
@@ -91,18 +97,18 @@ def generate_word_analysis(word_list: list[str]) -> AnalysisResult:
     return AnalysisResult(analyses=analyses)
 
 
-def generate_recall_questions(word_list: list[str]) -> HerinneringsTest:
+def generate_recall_prompts(word_list: list[str]) -> HerinneringsTest:
     """Generates recall questions for a list of Dutch words using the Gemini API.
 
     Parameters
     ----------
     word_list : list[str]
-        A list of Dutch words to generate recall questions for.
+        A list of Dutch words to generate recall prompts for.
 
     Returns
     -------
     HerinneringsTest
-        A HerinneringsTest object containing the generated recall questions.
+        A HerinneringsTest object containing the generated recall prompts.
     """
     if not word_list:
         return HerinneringsTest(gegenereerde_prompts=[])
@@ -117,15 +123,21 @@ def generate_recall_questions(word_list: list[str]) -> HerinneringsTest:
 
     for chunk in chunk_generator:
         prompt = ", ".join(chunk)
-        response = client.models.generate_content(
-            model=st.session_state["parameters"].gemini_model_name,
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": HerinneringsTest,
-                "system_instruction": st.session_state["parameters"].recall_generation_instruction,
-            },
-        )
+        try:
+            response = client.models.generate_content(
+                model=st.session_state["parameters"].gemini_model_name,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": HerinneringsTest,
+                    "system_instruction": st.session_state["parameters"].recall_generation_instruction,
+                },
+            )
+        except Exception as e:
+            print(
+                f"Er is een fout opgetreden bij het genereren van de recall prompts: {e}"
+            )
+            return HerinneringsTest(gegenereerde_prompts=[])
 
         # Ensure parsed_response is a HerinneringsTest instance
         if isinstance(response.parsed, HerinneringsTest):

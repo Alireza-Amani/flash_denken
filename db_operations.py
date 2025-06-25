@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS recall_prompts (
     word_id INTEGER NOT NULL,
     category TEXT NOT NULL,
     prompt_json TEXT NOT NULL,
-    last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- New field added here
+    last_used_at TEXT DEFAULT NULL, -- Timestamp of the last time this prompt was used
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
 );
 
@@ -124,14 +124,13 @@ CREATE INDEX IF NOT EXISTS idx_recall_prompts_last_used_at ON recall_prompts(las
 import sqlite3
 import datetime
 import json
-from typing import List, TYPE_CHECKING, Dict, Optional
+from typing import List, TYPE_CHECKING, Dict, Optional, Tuple
 import pandas as pd
 from pandas import DataFrame
 import pydantic
 import streamlit as st
 from gemini import post_process_analysis
-from utils import serialize_comparisons_dict_to_string
-
+from output_models import TermPrompts
 
 # This is a forward reference to avoid circular imports if AnalysisResult
 # if TYPE_CHECKING:
@@ -310,8 +309,11 @@ def _upsert_word(cursor: sqlite3.Cursor, word_analysis) -> int | None:
     Inserts a new word or updates an existing one, returning its ID.
     Uses INSERT OR IGNORE and then UPDATE if the row already exists.
     """
+
+    current_time = datetime.datetime.now().strftime(
+        st.session_state["parameters"].datetime_format)
     # Prepare data for the 'words' table, serializing lists/dicts to JSON
-    word_data = {
+    word_data: dict[str, object] = {
         "word": word_analysis.word,
         "part_of_speech": word_analysis.part_of_speech,
         "definition": word_analysis.definition,
@@ -327,7 +329,8 @@ def _upsert_word(cursor: sqlite3.Cursor, word_analysis) -> int | None:
         "comparisons_json": json.dumps(word_analysis.context.comparisons),
         "synonyms_json": json.dumps(word_analysis.relations.synonyms),
         "antonyms_json": json.dumps(word_analysis.relations.antonyms),
-        "collocations_json": json.dumps(word_analysis.relations.collocations)
+        "collocations_json": json.dumps(word_analysis.relations.collocations),
+        "created_at": current_time
     }
 
     columns = ', '.join(word_data.keys())
@@ -391,16 +394,11 @@ def _upsert_word(cursor: sqlite3.Cursor, word_analysis) -> int | None:
 
 def _save_thought_scenarios(cursor: sqlite3.Cursor, word_id: int, scenarios: list):
     """
-    Deletes existing thought scenarios for a word and inserts new ones.
+    Saves thought scenarios for a given word ID into the database.
     """
     if not scenarios:
         print(f"No thought scenarios to save for word ID {word_id}.")
         return
-
-    # Delete existing thought scenarios for this word to avoid duplicates on re-insertion
-    cursor.execute(
-        "DELETE FROM thought_scenarios WHERE word_id = ?", (word_id,))
-    print(f"Deleted existing thought scenarios for word ID {word_id}.")
 
     scenario_values = []
     for scenario in scenarios:
@@ -705,24 +703,25 @@ def save_user_thought_scenario(
         print(f"Unexpected error: {e}")
 
 
-def get_words_practice_tables() -> tuple[DataFrame, DataFrame]:
+def get_words_practice_tables() -> tuple[DataFrame, DataFrame, DataFrame]:
     """
-    Fetches the 'words' and 'practice_sessions' tables from the SQLite database
+    Fetches the 'words', 'practice_sessions', and 'recall_prompts' tables from the SQLite database
     and returns them as pandas DataFrames.
 
     Returns
     -------
-    tuple[DataFrame, DataFrame]
-        A tuple containing two DataFrames:
+    tuple[DataFrame, DataFrame, DataFrame]
+        A tuple containing three DataFrames:
         - The first DataFrame contains data from the 'words' table.
         - The second DataFrame contains data from the 'practice_sessions' table.
+        - The third DataFrame contains data from the 'recall_prompts' table.
     """
 
     db_path = st.session_state["parameters"].db_path
     statement_1 = """
     SELECT
         w.id, w.word, w.part_of_speech, w.definition,
-        w.mastery_score, w.created_at, w.learned_at, w.last_practiced_at
+        w.created_at, w.learned_at, w.ebisu_last_tested_at
     FROM words w
     ORDER BY w.created_at DESC;
     """
@@ -735,6 +734,13 @@ def get_words_practice_tables() -> tuple[DataFrame, DataFrame]:
     ORDER BY ps.session_date DESC;
     """
 
+    statement_3 = """
+    SELECT
+        rp.id, w.word, rp.prompt_json, rp.category, rp.last_used_at
+    FROM recall_prompts rp
+    JOIN words w ON rp.word_id = w.id
+    """
+
     try:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
@@ -743,21 +749,35 @@ def get_words_practice_tables() -> tuple[DataFrame, DataFrame]:
             # Fetch practice sessions table
             practice_df = pd.read_sql_query(statement_2, conn)
 
-        # Convert to datetime
-        words_df['created_at'] = pd.to_datetime(words_df['created_at'])
-        words_df['learned_at'] = pd.to_datetime(words_df['learned_at'])
-        words_df['last_practiced_at'] = pd.to_datetime(
-            words_df['last_practiced_at'])
-        practice_df['session_date'] = pd.to_datetime(
-            practice_df['session_date'])
+            # Fetch recall prompts table
+            recall_prompts_df = pd.read_sql_query(statement_3, conn)
 
-        return words_df, practice_df
+        # Convert to datetime
+        dt_format = st.session_state["parameters"].datetime_format
+        words_df['created_at'] = pd.to_datetime(
+            words_df['created_at'], format=dt_format)
+
+        words_df['learned_at'] = pd.to_datetime(
+            words_df['learned_at'], format=dt_format)
+
+        words_df['ebisu_last_tested_at'] = pd.to_datetime(
+            words_df['ebisu_last_tested_at'], format=dt_format)
+
+        practice_df['session_date'] = pd.to_datetime(
+            practice_df['session_date'], format=dt_format)
+
+        recall_prompts_df['last_used_at'] = pd.to_datetime(
+            recall_prompts_df['last_used_at'], format=dt_format)
+
+        return words_df, practice_df, recall_prompts_df
     except sqlite3.Error as e:
+        print("inside get_words_practice_tables 1")
         print(f"Database error: {e}")
-        return DataFrame(), DataFrame()
+        return DataFrame(), DataFrame(), DataFrame()
     except Exception as e:
+        print("inside get_words_practice_tables 2")
         print(f"Unexpected error: {e}")
-        return DataFrame(), DataFrame()
+        return DataFrame(), DataFrame(), DataFrame()
 
 # find ids, given words
 
@@ -877,15 +897,12 @@ def save_term_prompts_to_db(term_prompts_list: List[TermPrompts]) -> None:
     Saves a list of TermPrompts objects into the recall_prompts table.
     Each individual prompt (EnkelePrompt) from the TermPrompts list is stored
     as a separate row, linked to its corresponding word_id.
-    Updates the 'last_used_at' timestamp for each saved prompt.
-    Assumes `db_path` is a globally accessible variable.
     """
+    db_path = st.session_state["parameters"].db_path
     conn = None
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        # Get current time for last_used_at
-        current_timestamp = datetime.now().isoformat()
 
         # Iterate through each TermPrompts object
         for term_prompts_obj in term_prompts_list:
@@ -897,17 +914,14 @@ def save_term_prompts_to_db(term_prompts_list: List[TermPrompts]) -> None:
 
             if result:
                 word_id = result[0]
-                # Delete existing prompts for this word to avoid duplicates on resave
-                cursor.execute(
-                    "DELETE FROM recall_prompts WHERE word_id = ?", (word_id,))
 
-                # Insert each individual prompt with the current timestamp
+                # Insert each individual prompt
                 for prompt in term_prompts_obj.prompts:
                     # Use .model_dump_json() for Pydantic v2+
                     prompt_json = prompt.model_dump_json()
                     cursor.execute(
                         "INSERT INTO recall_prompts (word_id, category, prompt_json, last_used_at) VALUES (?, ?, ?, ?)",
-                        (word_id, prompt.categorie, prompt_json, current_timestamp)
+                        (word_id, prompt.categorie, prompt_json, None)
                     )
             else:
                 print(
@@ -933,8 +947,8 @@ def load_term_prompts_from_db(terms: Optional[List[str]] = None) -> List[TermPro
     Loads TermPrompts objects from the recall_prompts table.
     If 'terms' is provided, only loads prompts for those specific terms.
     Otherwise, loads all available prompts.
-    Assumes `db_path` is a globally accessible variable.
     """
+    db_path = st.session_state["parameters"].db_path
     conn = None
     loaded_prompts: List[TermPrompts] = []
     try:
@@ -995,3 +1009,74 @@ def load_term_prompts_from_db(terms: Optional[List[str]] = None) -> List[TermPro
             conn.close()
 
     return []
+
+# find word ids that we do not have any prompts for
+
+
+def find_word_without_prompts() -> List[str]:
+    """
+    Finds words in the 'words' table that do not have any associated prompts in the 'recall_prompts' table.
+
+    Returns
+    -------
+    List[str]
+        A list of word IDs that do not have any prompts.
+    """
+    db_path = st.session_state["parameters"].db_path
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+           # here we want to have set(ids in word table) - set(ids in recall_prompts table)
+            cursor.execute(
+                """
+                SELECT w.word
+                FROM words w
+                LEFT JOIN recall_prompts rp ON w.id = rp.word_id
+                WHERE rp.word_id IS NULL
+                """
+            )
+            word_ids_without_prompts = [row[0] for row in cursor.fetchall()]
+
+            return word_ids_without_prompts
+
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return []
+
+
+def get_word_ids_and_ebisu_params() -> List[Tuple[int, float, float, float, str, str]]:
+    """
+    Retrieves all word IDs along with their Ebisu parameters and two timestamps.
+
+    Returns
+    -------
+    List[Tuple[int, float, float, float, str, str]]
+        A list of tuples containing word ID, Ebisu parameters (alpha, beta, halflife),
+        and two timestamps (last tested at, learned at).
+    """
+
+    db_path = st.session_state["parameters"].db_path
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+            SELECT w.id, w.ebisu_alpha, w.ebisu_beta, w.ebisu_halflife,
+            w.ebisu_last_tested_at, w.learned_at
+            FROM words w
+            """
+            )
+            return cursor.fetchall()
+
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return []

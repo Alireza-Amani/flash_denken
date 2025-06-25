@@ -1,6 +1,10 @@
 
 import re
 from typing import List, Optional
+from output_models import (
+    WordAnalysis, CoreMeaning, ContextualInfo, RelationalWeb, Physicality,
+    ThoughtScenario, EnkelePrompt
+)
 
 
 def _generate_css() -> str:
@@ -570,3 +574,65 @@ def embed_video(video_url: str) -> str:
     return f"""
     <iframe width="80%" height="500" src="{video_url}" frameborder="0" allowfullscreen></iframe>
     """
+
+
+def generate_single_prompt_card_html(prompt: EnkelePrompt) -> str:
+    """
+    Genereert gestileerde HTML voor een enkele leertip (prompt_tekst)
+    met ingebedde CSS voor een zelfstandige weergave. De styling is
+    verbeterd om de prompt prominenter en 'op een voetstuk' te plaatsen,
+    zonder de dubbele aanhalingstekens.
+
+    Args:
+        prompt: Een EnkelePrompt-object dat de promptdetails bevat.
+
+    Returns:
+        Een string met de gestileerde HTML voor één promptkaart,
+        inclusief alle benodigde styling.
+    """
+    if not isinstance(prompt, EnkelePrompt):
+        # Fallback for unexpected input type
+        return "<p style='color: red; font-family: sans-serif;'>Fout: Verwacht een EnkelePrompt object als invoer.</p>"
+
+    # Remove quotes if they are part of the input string
+    cleaned_prompt_text = prompt.prompt_tekst.strip('"')
+
+    # HTML for a single prompt card with embedded <style> for self-contained styling
+    html_content = f"""
+    <div style="
+        background-color: #e8f0fe; /* A slightly more vibrant light blue background */
+        background: linear-gradient(145deg, #e0efff, #d5e9ff); /* Subtle gradient for depth */
+        border: 2px solid #8ba8cd; /* Thicker, more distinct border */
+        border-radius: 20px; /* Even more rounded corners */
+        padding: 40px; /* Increased padding to give it more 'mass' */
+        margin-bottom: 30px; /* Consistent spacing */
+        /* Enhanced box-shadow for a 'pedestal' effect, with a subtle blue glow */
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(100, 150, 250, 0.2);
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        font-family: 'Inter', sans-serif; /* Fallback to generic sans-serif */
+        box-sizing: border-box;
+        position: relative; /* Needed for potential future pseudo-elements */
+        overflow: hidden; /* Ensures content stays within rounded corners */
+        max-width: 750px; /* Slightly wider to accommodate larger text */
+        margin-left: auto; /* Center the div */
+        margin-right: auto; /* Center the div */
+    "
+    onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 45px rgba(0,0,0,0.25), 0 0 0 6px rgba(120, 180, 255, 0.3)'; cursor: pointer;"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 15px 35px rgba(0,0,0,0.15), 0 0 0 4px rgba(100, 150, 250, 0.2)';">
+        <style>
+            /* Embed a local style for the prompt text */
+            .prompt-text-embedded {{
+                font-size: 1.4rem; /* Even larger font size for prominence */
+                line-height: 1.8; /* Improved line height for readability */
+                color: #2c3e50; /* Darker, more prominent text color */
+                font-weight: 600; /* Semi-bold font weight to truly stand out */
+                margin: 0; /* Remove default paragraph margins */
+                text-align: center; /* Center align the text */
+            }}
+            /* Import Google Font if not already loaded globally in Streamlit */
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        </style>
+        <p class="prompt-text-embedded">{cleaned_prompt_text}</p>
+    </div>
+    """
+    return html_content

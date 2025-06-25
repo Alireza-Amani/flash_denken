@@ -1,8 +1,10 @@
 '''The widgets for the "Add Words" tab.'''
 
 import streamlit as st
-from gemini import generate_word_analysis
-from db_operations import save_analysis_result_to_db
+from gemini import generate_word_analysis, generate_recall_prompts
+from db_operations import (
+    save_analysis_result_to_db, save_term_prompts_to_db, find_word_without_prompts,
+)
 from utils import get_unique_new_words, parse_words_input
 
 
@@ -36,8 +38,9 @@ def word_input_addtab():
 
     # show the unique new words
     if truly_new_words_list:
+        # report the number of new words
         st.caption(
-            f"Deze woorden zijn nieuw: {', '.join(truly_new_words_list)}"
+            f"Er zijn {len(truly_new_words_list)} nieuwe woorden toegevoegd."
         )
     else:
         st.caption("Er zijn geen nieuwe woorden toegevoegd.")
@@ -53,6 +56,14 @@ def generate_analyses_button_callback():
     st.session_state["generated_analyses"] = generate_word_analysis(
         st.session_state["new_words_to_generate_list"]
     )
+
+    # now is the time to populate the `new_words_for_recall_prompts_list`
+    # before they are cleaned up
+    st.session_state["new_words_for_recall_prompts_list"] = (
+        st.session_state["new_words_to_generate_list"]
+    )
+
+    # clean up the new words list
     st.session_state["trigger_save_db"] = True
     st.session_state["trigger_cleanup_after_gemini"] = True
 
@@ -98,4 +109,81 @@ def save_analyses_to_db_button_addtab():
         type="primary",
         use_container_width=True,
         key="save_analyses_to_db_button_addtab_key"
+    )
+
+# similarly, lets have generation and save for the recall prompts
+
+
+def generate_recall_prompts_button_callback():
+    """Callback function for the 'Generate Recall Prompts' button."""
+    st.session_state["generated_recall_prompts"] = generate_recall_prompts(
+        st.session_state["new_words_for_recall_prompts_list"]
+    ).gegenereerde_prompts
+
+    # clean up the list
+    st.session_state["new_words_for_recall_prompts_list"] = []
+
+
+def generate_recall_prompts_button_addtab():
+    """Button to generate recall prompts for the new words."""
+
+    is_disabled = not st.session_state.get(
+        "new_words_for_recall_prompts_list", []
+    )
+
+    st.button(
+        "Genereer en sla herinneringsprompts op",
+        on_click=generate_recall_prompts_button_callback,
+        disabled=is_disabled,
+        icon=":material/smart_toy:",
+        help="Genereer herinneringsprompts voor de nieuwe woorden en sla ze op in de database.",
+        type="primary",
+        use_container_width=True,
+        key="generate_recall_prompts_button_addtab_key"
+    )
+
+
+def save_recall_prompts_db_callback():
+    """Callback function for the 'Save Recall Prompts to DB' button."""
+    save_term_prompts_to_db(
+        st.session_state["generated_recall_prompts"]
+    )
+    del st.session_state["generated_recall_prompts"]
+
+
+def save_recall_prompts_to_db_button_addtab():
+    """Button to save the generated recall prompts to the database."""
+
+    is_disabled = not st.session_state.get("generated_recall_prompts", False)
+
+    st.button(
+        "Sla herinneringsprompts op in de database",
+        on_click=save_recall_prompts_db_callback,
+        disabled=is_disabled,
+        icon=":material/database:",
+        help="Sla de gegenereerde herinneringsprompts op in de database.",
+        type="primary",
+        use_container_width=True,
+        key="save_recall_prompts_to_db_button_addtab_key"
+    )
+
+
+def words_without_prompt_callback():
+    """Callback function for the 'Words Without Prompts' button."""
+    st.session_state["words_without_prompts"] = find_word_without_prompts()
+
+    # merge it with `new_words_for_recall_prompts_list`, their union
+    st.session_state["new_words_for_recall_prompts_list"] = (
+        st.session_state["new_words_for_recall_prompts_list"] +
+        st.session_state["words_without_prompts"]
+    )
+
+
+def words_without_prompt_button_addtab():
+    """Button to find words without prompts."""
+    st.button(
+        "Zoek woorden zonder prompts",
+        on_click=words_without_prompt_callback,
+        use_container_width=True,
+        key="words_without_prompt_button_addtab_key"
     )
