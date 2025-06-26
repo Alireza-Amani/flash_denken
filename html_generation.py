@@ -1,6 +1,7 @@
 
 import re
-from typing import List, Optional
+import html
+from typing import List, Optional, Callable
 from output_models import (
     WordAnalysis, CoreMeaning, ContextualInfo, RelationalWeb, Physicality,
     ThoughtScenario, EnkelePrompt
@@ -576,63 +577,348 @@ def embed_video(video_url: str) -> str:
     """
 
 
-def generate_single_prompt_card_html(prompt: EnkelePrompt) -> str:
+def generate_single_prompt_card_html(prompt: 'EnkelePrompt') -> str:
     """
-    Genereert gestileerde HTML voor een enkele leertip (prompt_tekst)
-    met ingebedde CSS voor een zelfstandige weergave. De styling is
-    verbeterd om de prompt prominenter en 'op een voetstuk' te plaatsen,
-    zonder de dubbele aanhalingstekens.
+    Generates highly stylized HTML for a single prompt card, designed to be
+    conspicuous, elegant, and interactive.
+
+    This version uses a modern CSS approach with a nested div structure to create a
+    gradient border, along with advanced hover effects and decorative pseudo-elements.
 
     Args:
-        prompt: Een EnkelePrompt-object dat de promptdetails bevat.
+        prompt: An EnkelePrompt object containing the prompt details.
 
     Returns:
-        Een string met de gestileerde HTML voor één promptkaart,
-        inclusief alle benodigde styling.
+        A string containing the self-contained HTML and CSS for the prompt card.
     """
-    if not isinstance(prompt, EnkelePrompt):
-        # Fallback for unexpected input type
-        return "<p style='color: red; font-family: sans-serif;'>Fout: Verwacht een EnkelePrompt object als invoer.</p>"
+    # --- Input Validation and Sanitization ---
+    if not hasattr(prompt, 'prompt_tekst'):
+        return "<p style='color: red; font-family: sans-serif;'>Fout: Invoerobject heeft geen 'prompt_tekst' attribuut.</p>"
 
-    # Remove quotes if they are part of the input string
-    cleaned_prompt_text = prompt.prompt_tekst.strip('"')
+    # Clean the text and escape it to prevent HTML injection
+    cleaned_prompt_text = html.escape(prompt.prompt_tekst.strip('"'))
 
-    # HTML for a single prompt card with embedded <style> for self-contained styling
+    # --- HTML & CSS block ---
     html_content = f"""
-    <div style="
-        background-color: #e8f0fe; /* A slightly more vibrant light blue background */
-        background: linear-gradient(145deg, #e0efff, #d5e9ff); /* Subtle gradient for depth */
-        border: 2px solid #8ba8cd; /* Thicker, more distinct border */
-        border-radius: 20px; /* Even more rounded corners */
-        padding: 40px; /* Increased padding to give it more 'mass' */
-        margin-bottom: 30px; /* Consistent spacing */
-        /* Enhanced box-shadow for a 'pedestal' effect, with a subtle blue glow */
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(100, 150, 250, 0.2);
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-        font-family: 'Inter', sans-serif; /* Fallback to generic sans-serif */
-        box-sizing: border-box;
-        position: relative; /* Needed for potential future pseudo-elements */
-        overflow: hidden; /* Ensures content stays within rounded corners */
-        max-width: 750px; /* Slightly wider to accommodate larger text */
-        margin-left: auto; /* Center the div */
-        margin-right: auto; /* Center the div */
-    "
-    onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 45px rgba(0,0,0,0.25), 0 0 0 6px rgba(120, 180, 255, 0.3)'; cursor: pointer;"
-    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 15px 35px rgba(0,0,0,0.15), 0 0 0 4px rgba(100, 150, 250, 0.2)';">
-        <style>
-            /* Embed a local style for the prompt text */
-            .prompt-text-embedded {{
-                font-size: 1.4rem; /* Even larger font size for prominence */
-                line-height: 1.8; /* Improved line height for readability */
-                color: #2c3e50; /* Darker, more prominent text color */
-                font-weight: 600; /* Semi-bold font weight to truly stand out */
-                margin: 0; /* Remove default paragraph margins */
-                text-align: center; /* Center align the text */
-            }}
-            /* Import Google Font if not already loaded globally in Streamlit */
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        </style>
-        <p class="prompt-text-embedded">{cleaned_prompt_text}</p>
+    <style>
+        /* Import Google Font for the card */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        /* The main container acts as the gradient border and shadow holder */
+        .prompt-card-container {{
+            max-width: 800px;
+            margin: 40px auto; /* Provides vertical spacing */
+            padding: 3px; /* This padding with the gradient background creates the border effect */
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-in-out;
+        }}
+
+        /* The hover effect is applied to the container, making everything inside react */
+        .prompt-card-container:hover {{
+            transform: translateY(-8px) scale(1.03); /* Lift and grow effect */
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+        }}
+
+        /* The inner content box with the white background */
+        .prompt-card-content {{
+            padding: 40px 45px;
+            background-color: #ffffff;
+            border-radius: 21px; /* Slightly smaller radius to sit inside the container */
+            position: relative; /* Needed for the pseudo-element */
+            overflow: hidden;   /* Hides the overflowing parts of the pseudo-element */
+        }}
+
+        /* A decorative glowing orb in the background for a bit of fun */
+        .prompt-card-content::before {{
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(102, 166, 255, 0.2), transparent 70%);
+            transition: all 0.5s ease;
+            opacity: 0.7;
+            z-index: 1; /* Sits below the text */
+        }}
+
+        /* Animate the orb on hover for a dynamic feel */
+        .prompt-card-container:hover .prompt-card-content::before {{
+            transform: scale(1.2);
+            opacity: 1;
+        }}
+
+        /* The actual text styling */
+        .prompt-text-embedded {{
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem; /* Larger and more prominent */
+            font-weight: 500;  /* Medium weight is elegant and readable */
+            line-height: 1.7;
+            color: #2a3342; /* A softer, more professional dark color */
+            text-align: center;
+            margin: 0;
+            position: relative; /* Ensures text is on top of the pseudo-element */
+            z-index: 2;
+        }}
+    </style>
+
+    <div class="prompt-card-container" role="alert" aria-live="polite">
+        <div class="prompt-card-content">
+            <p class="prompt-text-embedded">{cleaned_prompt_text}</p>
+        </div>
     </div>
     """
     return html_content
+
+
+def _generate_card_scholarly(prompt_text: str) -> str:
+    """Generates an elegant, academic-themed card."""
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap');
+        .card-scholar {{
+            background: #fdfaf3;
+            border-left: 5px solid #a88562;
+            padding: 30px 40px;
+            margin: 30px auto;
+            max-width: 750px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            font-family: 'Lora', serif;
+            color: #4a4a4a;
+            transition: all 0.3s ease;
+            position: relative;
+        }}
+        .card-scholar:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-left-color: #c49a6c;
+        }}
+        .card-scholar p {{
+            font-size: 1.25rem;
+            line-height: 1.8;
+            margin: 0;
+            text-align: center;
+        }}
+    </style>
+    <div class="card-scholar">
+        <p>{prompt_text}</p>
+    </div>
+    """
+
+# -----------------------------------------------------------------------------
+#  DESIGN 2: NEON WAVE
+# -----------------------------------------------------------------------------
+
+
+def _generate_card_neon_wave(prompt_text: str) -> str:
+    """Generates a futuristic, dark-mode card with a neon glow."""
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap');
+        .card-neon-container {{
+            padding: 2px;
+            background: linear-gradient(135deg, #ff00c1, #9b00e9);
+            border-radius: 18px;
+            max-width: 750px;
+            margin: 30px auto;
+            box-shadow: 0 0 25px rgba(255, 0, 193, 0.4);
+            transition: all 0.3s ease-out;
+        }}
+        .card-neon-container:hover {{
+             box-shadow: 0 0 40px rgba(155, 0, 233, 0.6);
+        }}
+        .card-neon {{
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 40px;
+            border-radius: 16px;
+            font-family: 'Fira Code', monospace;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease;
+        }}
+        .card-neon p {{
+            font-size: 1.15rem;
+            line-height: 1.7;
+            text-align: center;
+            margin: 0;
+            color: #a7d1ff;
+        }}
+        .card-neon-container:hover .card-neon {{
+            background: #24243e;
+        }}
+    </style>
+    <div class="card-neon-container">
+        <div class="card-neon">
+            <p>&gt; {prompt_text}</p>
+        </div>
+    </div>
+    """
+
+# -----------------------------------------------------------------------------
+#  DESIGN 3: CALM GARDEN
+# -----------------------------------------------------------------------------
+
+
+def _generate_card_calm_garden(prompt_text: str) -> str:
+    """Generates a soft, nature-inspired card."""
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600&display=swap');
+        .card-garden {{
+            background: #f0f7f1;
+            border: 2px solid #a3c9a8;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 750px;
+            margin: 30px auto;
+            font-family: 'Nunito Sans', sans-serif;
+            color: #3e5641;
+            position: relative;
+            box-shadow: 0 5px 10px -5px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }}
+        .card-garden:hover {{
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px -10px rgba(62, 86, 65, 0.2);
+            border-color: #84b38a;
+        }}
+        .card-garden p {{
+            font-size: 1.3rem;
+            line-height: 1.7;
+            text-align: center;
+            font-weight: 400;
+            margin: 0;
+        }}
+    </style>
+    <div class="card-garden">
+        <p>{prompt_text}</p>
+    </div>
+    """
+
+# -----------------------------------------------------------------------------
+#  DESIGN 4: BOLD MINIMALIST
+# -----------------------------------------------------------------------------
+
+
+def _generate_card_bold_minimalist(prompt_text: str) -> str:
+    """Generates a high-contrast, minimalist card with a bold accent."""
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
+        .card-minimalist {{
+            background: #ffffff;
+            border: 3px solid #111;
+            padding: 50px;
+            max-width: 750px;
+            margin: 30px auto;
+            border-radius: 0;
+            font-family: 'Inter', sans-serif;
+            color: #111;
+            box-shadow: 8px 8px 0px #e44d26; /* The accent color */
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }}
+        .card-minimalist:hover {{
+            box-shadow: 12px 12px 0px #e44d26;
+            transform: translate(-4px, -4px);
+        }}
+        .card-minimalist p {{
+            font-size: 1.6rem;
+            line-height: 1.6;
+            margin: 0;
+            font-weight: 700;
+        }}
+    </style>
+    <div class="card-minimalist">
+        <p>{prompt_text}</p>
+    </div>
+    """
+
+# -----------------------------------------------------------------------------
+#  DESIGN 5: SKETCHBOOK IDEA
+# -----------------------------------------------------------------------------
+
+
+def _generate_card_sketchbook(prompt_text: str) -> str:
+    """Generates a card that looks like a hand-drawn sketchbook entry."""
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap');
+        .card-sketch {{
+            background: #fffcf5;
+            padding: 35px;
+            max-width: 750px;
+            margin: 30px auto;
+            font-family: 'Kalam', cursive;
+            color: #333;
+            border: 2px solid #555;
+            /* Creates a sketchy border effect using border-radius */
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            position: relative;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }}
+        .card-sketch:hover {{
+             transform: rotate(1deg);
+             box-shadow: 5px 5px 8px rgba(0,0,0,0.15);
+        }}
+        .card-sketch p {{
+            font-size: 1.4rem;
+            line-height: 1.7;
+            text-align: center;
+            margin: 0;
+        }}
+    </style>
+    <div class="card-sketch">
+        <p>{prompt_text}</p>
+    </div>
+    """
+
+
+# -----------------------------------------------------------------------------
+#  THE MOTHER FUNCTION (DISPATCHER)
+# -----------------------------------------------------------------------------
+def generate_prompt_card_html(prompt: EnkelePrompt, design_choice: int = 1) -> str:
+    """
+    Generates and returns stylized HTML for a prompt card based on a chosen design.
+
+    This function acts as a dispatcher, calling one of several specialized
+    functions to generate the card's HTML and CSS.
+
+    Args:
+        prompt: An EnkelePrompt object containing the prompt details.
+        design_choice: An integer from 1 to 5 to select the design theme:
+                       1: Scholarly (Default)
+                       2: Neon Wave
+                       3: Calm Garden
+                       4: Bold Minimalist
+                       5: Sketchbook Idea
+
+    Returns:
+        A string containing the self-contained HTML and CSS for the prompt card.
+    """
+    # --- Input Validation and Sanitization ---
+    if not isinstance(prompt, EnkelePrompt) or not hasattr(prompt, 'prompt_tekst'):
+        return "<p style='color: red; font-family: sans-serif;'>Fout: Ongeldig invoerobject.</p>"
+
+    # Securely escape the text to prevent HTML injection.
+    cleaned_prompt_text = html.escape(prompt.prompt_tekst.strip('"'))
+
+    # --- Design Dispatcher ---
+    # A dictionary mapping the design choice to the appropriate function.
+    design_functions: Dict[int, Callable[[str], str]] = {
+        1: _generate_card_scholarly,
+        2: _generate_card_neon_wave,
+        3: _generate_card_calm_garden,
+        4: _generate_card_bold_minimalist,
+        5: _generate_card_sketchbook,
+    }
+
+    # Get the function for the chosen design, or default to the first one.
+    selected_function = design_functions.get(
+        design_choice, _generate_card_scholarly)
+
+    return selected_function(cleaned_prompt_text)

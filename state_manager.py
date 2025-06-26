@@ -14,6 +14,8 @@ stvar_list = [
     "uploaded_images_list",  # List[UploadedFile]
     "video_urls_list",  # List[str]
     "current_word_user_media_list",  # List[Dict[str, str]]
+
+    "word_ids_to_recall_list",  # List[int]
     "word_analyses_to_recall_list",  # List[WordAnalysis]
 ]
 
@@ -32,6 +34,7 @@ stvar_int = [
     "word_id_to_explore",
     "number_of_words_to_learn",
     "current_word_idx_to_learn",
+    "current_word_idx_to_recall",
 ]
 
 stvar_bool = [
@@ -63,9 +66,10 @@ stvar_bool = [
     "start_recall_session",
     "current_recall_word_idx",
     "current_recall_word_is_studied",
+]
 
-
-
+stvar_dict = [
+    "prompts_to_recall_dict",  # Dict[int, List[EnkelePrompt]]
 ]
 
 stvar_df = [
@@ -106,6 +110,11 @@ def initialize_state():
         if var not in st.session_state:
             st.session_state[var] = 0
 
+    # dictionaries
+    for var in stvar_dict:
+        if var not in st.session_state:
+            st.session_state[var] = {}
+
     # custom classes
     # Parameters
     if "parameters" not in st.session_state:
@@ -136,3 +145,6 @@ def initialize_state():
         print(
             f"Words already in DB: {st.session_state['words_already_in_db_list']}"
         )
+
+    # default values for specific variables
+    st.session_state.recall_prob_threshold = 50  # default threshold of 50%

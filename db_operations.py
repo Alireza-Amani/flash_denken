@@ -125,12 +125,13 @@ import sqlite3
 import datetime
 import json
 from typing import List, TYPE_CHECKING, Dict, Optional, Tuple
+from collections import defaultdict
 import pandas as pd
 from pandas import DataFrame
 import pydantic
 import streamlit as st
 from gemini import post_process_analysis
-from output_models import TermPrompts
+from output_models import TermPrompts, EnkelePrompt
 
 # This is a forward reference to avoid circular imports if AnalysisResult
 # if TYPE_CHECKING:
@@ -1010,7 +1011,53 @@ def load_term_prompts_from_db(terms: Optional[List[str]] = None) -> List[TermPro
 
     return []
 
-# find word ids that we do not have any prompts for
+# load N prompts for each word id -> Dict[int, List[EnkelePrompt]]:
+
+
+def load_n_prompts_for_words(word_ids: List[int], n: int = 3) -> Dict[int, List[EnkelePrompt]]:
+    """Loads a specified number of prompts for each word ID from the recall_prompts table.
+
+    Parameters
+    ----------
+    word_ids : List[int]
+        A list of word IDs to load prompts for.
+    n : int
+        The number of prompts to load for each word ID.
+
+    Returns
+    -------
+    Dict[int, List[EnkelePrompt]]
+        A dictionary mapping word IDs to their corresponding prompts.
+    """
+    db_path = st.session_state["parameters"].db_path
+    prompts_by_word: Dict[int, List[EnkelePrompt]] = defaultdict(list)
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            for word_id in word_ids:
+                cursor.execute(
+                    """
+                    SELECT prompt_json, word_id
+                    FROM recall_prompts
+                    WHERE word_id = ?
+                    LIMIT ?
+                    """,
+                    (word_id, n)
+                )
+                rows = cursor.fetchall()
+                for row in rows:
+                    prompt = EnkelePrompt.model_validate_json(row[0])
+                    prompts_by_word[row[1]].append(prompt)
+
+            print(f"Loaded prompts for {len(prompts_by_word)} words.")
+
+    except sqlite3.Error as e:
+        print(f"Database error during load: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred during load: {e}")
+
+    return prompts_by_word
 
 
 def find_word_without_prompts() -> List[str]:
