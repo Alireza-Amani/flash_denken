@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woordanalyse: minpunt</title>
+    <style>
+        
+        :root {
+            /* Revised Color Palette: Softer, more inviting, a bit more Dutch landscape-inspired */
+            --primary-text-color: #2C3E50; /* Darker blue-grey for main text - professional yet warm */
+            --secondary-text-color: #7F8C8D; /* Muted grey for supporting info - soft, earthy */
+            --background-color-light: #FBFBFB; /* Very light, almost off-white for body background - airy, clean */
+            --background-color-card: #FFFFFF; /* Pure white for main content cards - crisp contrast */
+            --accent-color: #007bff; /* A slightly brighter, more vibrant Dutch blue, symbolizing clarity & opportunity */
+            --secondary-accent-color: #FF7F50; /* Coral/soft orange - a playful, warm complementary color */
+            --border-color: #E0E0E0; /* Lighter, softer border */
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Slightly more prominent but still soft shadow */
+            --highlight-bg-color: #F8F9FA; /* A very subtle light grey for element backgrounds, gentle */
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; /* Using 'Inter' (or fallback), a modern, friendly sans-serif */
+            line-height: 1.8; /* Increased line-height for more breathing room */
+            color: var(--primary-text-color);
+            background-color: var(--background-color-light);
+            /* Add a subtle background texture for depth and playfulness */
+            background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e9e9e9' fill-opacity='0.15' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 6v-1L1 0h1z'/%3E%3C/g%3E%3C/svg%3E"); /* Very subtle diagonal lines */
+            margin: 0;
+            padding: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .word-container {
+            background-color: var(--background-color-card);
+            border-radius: 20px; /* Even softer rounded corners */
+            box-shadow: var(--card-shadow);
+            padding: 60px 70px;
+            max-width: 950px;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative; /* For potential future animations */
+            overflow: hidden; /* Ensures shadows/transforms are clipped */
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif; /* A clear, modern, slightly more geometric font for impact */
+            color: var(--accent-color); /* H1 using accent color for vibrancy */
+            font-size: 3.8em; /* Slightly larger, more dominant */
+            font-weight: 700;
+            margin-bottom: 5px; /* Less margin, bringing POS closer */
+            display: inline-block;
+            vertical-align: bottom;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.05); /* Subtle text shadow for depth */
+        }
+
+        .part-of-speech {
+            font-size: 1.6em; /* A bit larger to match the H1 scale */
+            color: var(--secondary-text-color);
+            font-style: normal;
+            font-weight: 400;
+            margin-left: 20px; /* Slightly more distinct separation */
+            display: inline-block;
+            vertical-align: bottom;
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif; /* Consistent header font */
+            color: var(--primary-text-color);
+            font-size: 2.5em; /* Larger, clearer section headers */
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color); /* Slightly thicker, more defined border */
+            padding-bottom: 15px; /* More padding */
+            margin-top: 50px; /* More vertical space */
+            margin-bottom: 35px; /* More vertical space */
+            position: relative;
+        }
+        h2::after { /* A subtle, playful accent under the h2 */
+            content: '';
+            display: block;
+            width: 50px; /* A short accent line */
+            height: 4px;
+            background-color: var(--secondary-accent-color); /* Using the new accent color */
+            position: absolute;
+            bottom: -2px; /* Position it slightly overlapping the border */
+            left: 0;
+            border-radius: 2px;
+        }
+
+
+        h3 {
+            font-family: 'Outfit', sans-serif; /* Consistent header font */
+            color: var(--primary-text-color);
+            font-size: 2em; /* Clearer sub-headings, bolder */
+            font-weight: 600;
+            margin-top: 40px; /* More space */
+            margin-bottom: 20px; /* More space */
+        }
+
+        p {
+            margin-bottom: 1.5em; /* More space between paragraphs */
+            color: var(--primary-text-color); /* Ensure paragraph text color is consistent */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2em; /* More margin */
+        }
+
+        li {
+            margin-bottom: 1.2em; /* More space between list items */
+            padding-left: 2em; /* Ample space for bullet */
+            position: relative;
+        }
+        li::before {
+            content: '♦'; /* A slightly more interesting diamond bullet */
+            color: var(--secondary-accent-color); /* Bullet in secondary accent color for playfulness */
+            font-size: 1.1em; /* Standard size bullet */
+            position: absolute;
+            left: 0;
+            top: 0.1em; /* Fine-tuned alignment */
+            font-weight: bold;
+        }
+
+        .tag {
+            background-color: var(--highlight-bg-color);
+            color: var(--primary-text-color); /* Tags use primary text color for readability */
+            padding: 10px 18px; /* Slightly larger, more comfortable tags */
+            border-radius: 12px; /* Softer pill shape */
+            font-size: 1em; /* Slightly larger font */
+            font-weight: 500;
+            margin-right: 15px; /* More space */
+            margin-bottom: 15px; /* More space */
+            display: inline-block; /* Ensure they lay out nicely */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Transition for hover */
+        }
+        .tag:hover {
+            background-color: var(--accent-color); /* Hover effect for tags */
+            color: white;
+            transform: translateY(-2px); /* Subtle lift on hover */
+        }
+
+
+        .pronunciation {
+            font-family: 'Fira Mono', monospace; /* A clean, modern monospaced font */
+            font-size: 1.2em; /* Slightly larger for clarity */
+            background-color: var(--highlight-bg-color);
+            padding: 15px 22px; /* More padding */
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 25px;
+            color: var(--primary-text-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
+        }
+
+        .scenario-grid {
+            /* FORCED SINGLE COLUMN: All scenarios will stack vertically */
+            display: grid;
+            grid-template-columns: 1fr; /* This is the key: forces one column */
+            gap: 40px; /* Still maintains vertical space between cards */
+            margin-top: 40px; /* More space above */
+        }
+
+        .scenario-card {
+            background-color: var(--background-color-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px; /* Softer radius */
+            padding: 35px; /* More internal padding */
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06); /* Softer initial shadow */
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; /* Smoother, longer transition */
+        }
+        .scenario-card:hover {
+            transform: translateY(-6px) scale(1.005); /* More noticeable lift and tiny scale */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* More prominent shadow on hover */
+        }
+
+        .scenario-card h4 {
+            font-family: 'Outfit', sans-serif; /* Consistent header font */
+            color: var(--accent-color); /* Scenario titles use accent color */
+            font-size: 1.6em; /* Clearer scenario titles */
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 18px; /* More margin */
+        }
+
+        .scenario-card p {
+            margin-bottom: 1.2em;
+            font-size: 1.05em; /* Slightly larger text in cards for readability */
+            color: var(--secondary-text-color); /* Card text a bit softer */
+        }
+
+        .scenario-card .label {
+            font-weight: 700; /* Labels even bolder */
+            color: var(--primary-text-color);
+            margin-right: 12px; /* More space */
+        }
+
+        .comparison-item {
+            margin-bottom: 30px; /* More space */
+            padding-bottom: 30px;
+            border-bottom: 1px dashed var(--border-color); /* Dashed border for a lighter, more playful feel */
+        }
+        .comparison-item strong {
+            color: var(--primary-text-color);
+            font-weight: 700; /* Even bolder */
+            font-size: 1.25em; /* Clearer comparison headings */
+        }
+
+        .expression-text {
+            font-weight: 500;
+            color: var(--primary-text-color);
+            background-color: var(--highlight-bg-color);
+            padding: 18px 25px; /* More padding for a softer feel */
+            border-radius: 14px; /* Softer radius */
+            display: block;
+            margin-top: 30px; /* More space */
+            font-style: italic; /* Subtle italic for expressions, makes them feel distinct */
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.03); /* Inner shadow for subtle depth */
+        }
+        .expression-text strong {
+            color: var(--accent-color); /* The core word accent color */
+            font-weight: 800; /* Extra bold for emphasis */
+            /* animation: pulse 1.5s infinite alternate; /* Uncomment for continuous subtle pulse */
+        }
+
+        /* Keyframes for potential subtle pulse animation on highlighted words */
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.01); }
+        }
+
+        /* --- New CSS for user-added sections --- */
+        .user-added-section {
+            margin-top: 60px; /* More space above this whole section */
+            padding-top: 30px;
+            border-top: 2px solid var(--secondary-accent-color); /* A clear divider */
+        }
+
+        .user-added-section h2 {
+            color: var(--secondary-accent-color); /* Make this section's header stand out */
+            border-color: var(--accent-color); /* Complementary border */
+        }
+        .user-added-section h2::after {
+            background-color: var(--primary-text-color); /* A different accent for this H2 */
+        }
+
+        .user-scenario-card h4 {
+            color: var(--accent-color); /* Keep scenario titles consistent */
+        }
+
+        .user-media-card {
+            text-align: center;
+            margin-top: 40px; /* Space between user scenario and media */
+        }
+        .user-media-card img,
+        .user-media-card video,
+        .user-media-card audio {
+            max-width: 100%;
+            width: 80%; /* Make media a bit narrower for better focus */
+            min-height: 50px; /* Ensure there's a minimum height for media */
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Subtle shadow for media */
+        }
+        .user-media-card video {
+            max-height: 400px; /* Limit video height */
+        }
+        .user-media-card audio {
+            width: 80%; /* Make audio player a bit narrower */
+        }
+
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&family=Fira+Mono:wght@400&display=swap');
+    
+    </style>
+</head>
+<body>
+    <div class="word-container">
+        
+        <h1>minpunt</h1>
+        <span class="part-of-speech">(Noun)</span>
+        <p class="definition">Een minpunt is een specifiek nadelig aspect, een gebrek of een tekortkoming aan iets.</p>
+    
+        
+        <h2>Grammatica</h2>
+        <p><span class="label">Lidwoord:</span> het</p>
+        <p><span class="label">Verleden Tijd:</span> None</p>
+        <p><span class="label">Voltooid Deelwoord:</span> None</p>
+    
+        
+        <h2>Contextuele Informatie</h2>
+        <p><span class="label">Formaliteit:</span> <span class="tag">Neutraal</span></p>
+        <h3>Typisch Gebruik</h3>
+        <p>Veel gebruikt in recensies, evaluaties, rapporten of bij het bespreken van voor- en nadelen. Het wordt vaak gebruikt om een balans te vinden in een beoordeling door zowel positieve als negatieve aspecten te benoemen.</p>
+        <h3>Vergelijkingen</h3>
+        
+            <div class="comparison-item">
+                <strong>Nadeel</strong>: Een algemene term voor een negatieve consequentie of eigenschap. Een 'minpunt' is een specifiek 'nadeel' of tekortkoming, vaak als één van meerdere punten in een opsomming
+            </div>
+            
+            <div class="comparison-item">
+                <strong>Tekortkoming</strong>: Kan een persoonlijk gebrek of een structurele fout aanduiden. 'Minpunt' is meer gericht op een specifieke, constateerbare fout
+            </div>
+            
+            <div class="comparison-item">
+                <strong>Gebrek</strong>: Impliceert een ontbreken van iets noodzakelijks of gewensts. 'Minpunt' kan ook iets zijn dat aanwezig is, maar ongewenst
+            </div>
+            
+    
+        
+        <h2>Relationeel Netwerk</h2>
+        <h3>Synoniemen</h3>
+        <p><span class="tag">nadeel</span><span class="tag">tekortkoming</span><span class="tag">gebrek</span><span class="tag">zwak punt</span></p>
+        <h3>Antoniemen</h3>
+        <p><span class="tag">pluspunt</span><span class="tag">voordeel</span><span class="tag">sterk punt</span><span class="tag">kwaliteit</span></p>
+    
+        
+        <h2>Uitspraak & Vorm</h2>
+        <h3>Uitspraak (IPA)</h3>
+        <p class="pronunciation">/ˈmɪnpʏnt/</p>
+    
+        
+        <h2>Gedachtescenario's</h2>
+        <div class="scenario-grid">
+            
+                <div class="scenario-card">
+                    <h4>De Productrecensie</h4>
+                    <p><span class="label">Situatie:</span> Je hebt een nieuwe smartphone gekocht en bent over het algemeen zeer tevreden, maar één aspect valt tegen.</p>
+                    <p><span class="label">Interne Monoloog:</span> De camera is geweldig, de batterijduur ook. Maar de software is toch wat traag, en dat merk ik wel elke keer. Dat is echt een specifieke tegenvaller. De rest is top, maar dit is echt een puntje van kritiek.</p>
+                    <div class="expression-text">
+                        <span class="label">Uitdrukking:</span> Over het algemeen ben ik erg blij met de telefoon, maar het grootste <strong>minpunt</strong> is toch wel de trage software.
+                    </div>
+                </div>
+            
+                <div class="scenario-card">
+                    <h4>Het Projectvoorstel</h4>
+                    <p><span class="label">Situatie:</span> Een team presenteert een nieuw projectplan aan het management. Het plan heeft veel sterke punten, maar ook een duidelijk risico.</p>
+                    <p><span class="label">Interne Monoloog:</span> Het plan is ambitieus en de doelen zijn haalbaar. Financieel ziet het er goed uit. Echter, de afhankelijkheid van die ene externe partij... dat is echt een kwetsbaarheid. Dat moeten we expliciet benoemen als een negatief punt.</p>
+                    <div class="expression-text">
+                        <span class="label">Uitdrukking:</span> Een <strong>minpunt</strong> van dit projectvoorstel is de grote afhankelijkheid van externe leveranciers.
+                    </div>
+                </div>
+            
+                <div class="scenario-card">
+                    <h4>Het Restaurantbezoek</h4>
+                    <p><span class="label">Situatie:</span> Je hebt heerlijk gegeten in een nieuw restaurant, de sfeer was goed, maar de bediening was traag en onoplettend.</p>
+                    <p><span class="label">Interne Monoloog:</span> Het eten was fantastisch en de inrichting was sfeervol. Echt een leuke avond, op één ding na. De service was echt niet wat het moest zijn. Dat verpeste het een beetje.</p>
+                    <div class="expression-text">
+                        <span class="label">Uitdrukking:</span>
+                        <input type="text" placeholder="Vul hier de uitdrukking in met 'minpunt'" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    </div>
+                </div>
+            
+        </div>
+    
+        
+        <h2>Kernbetekenis</h2>
+        <h3>Vertalingen</h3>
+        <ul>
+            <li>drawback</li><li>disadvantage</li><li>downside</li><li>minus point</li>
+        </ul>
+        <h3>Nuance</h3>
+        <p>Duidt op een enkel, identificeerbaar negatief element binnen een groter geheel dat verder positief of neutraal kan zijn. Het is vaak een concrete, benoembare flaw in een product, plan, of situatie. Het is specifieker dan 'nadeel'.</p>
+    
+        
+        <div class="user-added-section">
+            <h2>Jouw Eigen Gedachtescenario</h2>
+            <div class="scenario-grid">
+                <div class="scenario-card user-scenario-card">
+                    <h4>Avondwandeling</h4>
+                    <p><span class="label">Situatie:</span> Walking through a quiet Dutch village in the evening, seeing lights in windows.</p>
+                    <p><span class="label">Interne Monoloog:</span> The soft glow from the houses, the peaceful atmosphere... it feels just right.</p>
+                    <div class="expression-text">
+                        <span class="label">Uitdrukking:</span> Wat een gezellige avondwandeling!
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="user-added-section user-media-card">
+            <h2>Jouw Eigen Media</h2>
+            <img src="data/images/bodem.jpg" alt="Door gebruiker toegevoegde afbeelding">
+            <audio controls>
+                <source src="./speech.wav" type="audio/mpeg">
+                <source src="./speech.wav" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+        
+            <video controls>
+                <source src="./Screen Recording 2024-12-31 at 9.35.05 PM.mov" type="video/mp4">
+                <source src="./Screen Recording 2024-12-31 at 9.35.05 PM.mov" type="video/webm">
+                Your browser does not support the video tag.
+            </video>
+        
+        </div>
+     </div>
+</body>
+</html>
+    
