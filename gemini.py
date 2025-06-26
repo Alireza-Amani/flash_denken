@@ -10,6 +10,19 @@ from output_models import (
 def post_process_analysis(analysis: AnalysisResult, loader: bool = False) -> AnalysisResult:
     """
     Post-processes the AnalysisResult object to ensure all fields are correctly formatted.
+
+    Parameters
+    ----------
+    analysis : AnalysisResult
+        The AnalysisResult object to post-process.
+    loader : bool, optional
+        If True, the comparisons are expected to be in a stringified dictionary format.
+        If False, they are expected to be in a simple string format. Defaults to False.
+
+    Returns
+    -------
+    AnalysisResult
+        The post-processed AnalysisResult object.
     """
 
     for idx, _ in enumerate(analysis.analyses):

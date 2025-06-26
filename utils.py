@@ -3,6 +3,7 @@
 from typing import List, Dict, Any, Generator, Optional
 import ast
 import re
+import json
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import requests
 from requests.exceptions import RequestException
@@ -179,8 +180,23 @@ def parse_comparisons_string_to_dict(comparisons_string: str) -> Dict[str, str]:
         A dictionary where keys are the comparison terms and values are their explanations.
         Returns an empty dictionary if the input string is empty or not a string.
     """
-    if not comparisons_string or not isinstance(comparisons_string, str):
+    if not comparisons_string:  # or not isinstance(comparisons_string, str):
         return {}
+
+    # first try simple json parsing
+    try:
+        parsed_dict = json.loads(comparisons_string)
+        if isinstance(parsed_dict, dict):
+            # Ensure all keys and values are strings, as expected by your original function's return type
+            print("successfully parsed stringified dictionary using json.loads")
+            return {str(k): str(v) for k, v in parsed_dict.items()}
+        else:
+            print(
+                f"Warning: Input string evaluated to a {type(parsed_dict)}, not a dictionary.")
+
+    except Exception as e:
+        print("inside parse_comparisons_string_to_dict")
+        print(f"Error parsing stringified dictionary: {e}")
 
     parsed_dict = {}
     # Pattern: Captures a group of word characters (the key), followed by a colon,

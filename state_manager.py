@@ -65,11 +65,13 @@ stvar_bool = [
     # recall tab
     "start_recall_session",
     "current_recall_word_idx",
-    "current_recall_word_is_studied",
 ]
 
 stvar_dict = [
+    "current_word_user_media_dict",  # Dict[int, Dict[str, str]]
     "prompts_to_recall_dict",  # Dict[int, List[EnkelePrompt]]
+    "recall_words_ebisu_dict",
+    "current_recall_word_media_dict",  # Dict[int, Dict[str, str]]
 ]
 
 stvar_df = [

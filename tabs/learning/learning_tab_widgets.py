@@ -201,21 +201,21 @@ def user_thought_scenario_input():
         "Titel van de gedachtegang", value=st.session_state.get("user_thought_title", ""),
         help="Een korte, beschrijvende titel voor de gedachtegang.",
         key="user_thought_title_input_key",
-        on_change=user_thought_input_callback,
+        # on_change=user_thought_input_callback,
         args=("user_thought_title_input_key", "user_thought_title")
     )
     st.text_area(
         "Situatie", value=st.session_state.get("user_thought_situation", ""),
         help="De objectieve feiten van het mini-verhaal.",
         key="user_thought_situation_input_key",
-        on_change=user_thought_input_callback,
+        # on_change=user_thought_input_callback,
         args=("user_thought_situation_input_key", "user_thought_situation")
     )
     st.text_area(
         "Interne monoloog", value=st.session_state.get("user_thought_internal_monologue", ""),
         help="De pre-linguistische interne gedachte, oordeel of gevoel van de persoon in het verhaal.",
         key="user_thought_internal_monologue_input_key",
-        on_change=user_thought_input_callback,
+        # on_change=user_thought_input_callback,
         args=("user_thought_internal_monologue_input_key",
               "user_thought_internal_monologue")
     )
@@ -223,7 +223,7 @@ def user_thought_scenario_input():
         "Expressie", value=st.session_state.get("user_thought_expression", ""),
         help="De uiteindelijke gearticuleerde zinnen in het Nederlands, waarin het doelwoord op een natuurlijke manier naar voren komt. Het doelwoord moet worden omgeven door **dubbele sterretjes**.",
         key="user_thought_expression_input_key",
-        on_change=user_thought_input_callback,
+        # on_change=user_thought_input_callback,
         args=("user_thought_expression_input_key", "user_thought_expression")
     )
 
@@ -232,19 +232,19 @@ def user_thought_scenario_input():
 
 def user_thought_input_cleanup():
     """Cleans up the user thought input fields by resetting their values."""
-    st.session_state["user_thought_title"] = ""
-    st.session_state["user_thought_situation"] = ""
-    st.session_state["user_thought_internal_monologue"] = ""
-    st.session_state["user_thought_expression"] = ""
+    st.session_state["user_thought_title_input_key"] = ""
+    st.session_state["user_thought_situation_input_key"] = ""
+    st.session_state["user_thought_internal_monologue_input_key"] = ""
+    st.session_state["user_thought_expression_input_key"] = ""
 
 
 def save_user_thought_callback():
     """Callback to save the user thought scenario."""
     thought_scenario = ThoughtScenario(
-        title=st.session_state["user_thought_title"],
-        situation=st.session_state["user_thought_situation"],
-        internal_monologue=st.session_state["user_thought_internal_monologue"],
-        expression=st.session_state["user_thought_expression"],
+        title=st.session_state["user_thought_title_input_key"],
+        situation=st.session_state["user_thought_situation_input_key"],
+        internal_monologue=st.session_state["user_thought_internal_monologue_input_key"],
+        expression=st.session_state["user_thought_expression_input_key"],
     )
     idx = st.session_state.get("current_word_idx_to_learn", 0)
     word_id = st.session_state["word_ids_to_learn_list"][idx]
@@ -257,10 +257,9 @@ def save_user_thought_callback():
 def save_user_thought_button():
     """Renders a button to save the user thought scenario."""
     is_disabled = not all([
-        # st.session_state.get("user_thought_title", ""),
-        st.session_state.get("user_thought_situation", ""),
-        st.session_state.get("user_thought_internal_monologue", ""),
-        st.session_state.get("user_thought_expression", "")
+        st.session_state.get("user_thought_situation_input_key", ""),
+        st.session_state.get("user_thought_internal_monologue_input_key", ""),
+        st.session_state.get("user_thought_expression_input_key", "")
     ])
     st.button(
         "Sla je gedachtegang op",
@@ -435,7 +434,7 @@ def get_user_media(word_id: int):
     try:
         user_media = load_user_media(word_id)
         categorized_media = categorize_content(user_media)
-        st.session_state["current_word_user_media_list"] = categorized_media
+        st.session_state["current_word_user_media_dict"] = categorized_media
     except Exception as e:
         print(f"Error loading user media: {e}")
 
@@ -474,7 +473,7 @@ def display_user_images():
     """Displays user-uploaded images."""
 
     # display images
-    user_media = st.session_state.get("current_word_user_media_list", {})
+    user_media = st.session_state.get("current_word_user_media_dict", {})
 
     if user_media.get("images"):
         st.subheader("Afbeeldingen")
@@ -487,7 +486,7 @@ def display_user_images():
 
 def display_user_videos():
     """Displays user-uploaded videos."""
-    user_media = st.session_state.get("current_word_user_media_list", {})
+    user_media = st.session_state.get("current_word_user_media_dict", {})
 
     if user_media.get("video"):
         st.subheader("Video's")
@@ -495,32 +494,6 @@ def display_user_videos():
             # embed the video
             st.markdown(embed_video(video), unsafe_allow_html=True)
 
-
-# # lets have an expander for personal thought scenario
-#         with st.expander("Jouw persoonlijke gedachte scenario", expanded=False):
-#             user_thought_scenario_input()
-#             save_user_thought_button()
-#             st.divider()
-
-#         # another expander for the word image
-#         with st.expander("Afbeelding van het woord", expanded=False):
-#             image_uploader()
-#             save_resize_image_button()
-
-#             if st.session_state.get("uploaded_images_list"):
-#                 for uploaded_image in st.session_state["uploaded_images_list"]:
-#                     image = Image.open(uploaded_image)
-#                     st.image(image, caption="Uploaded Image",
-#                              use_container_width=True)
-
-#         # another expander to provide url to a video
-#         with st.expander("Video URL", expanded=False):
-#             video_urls_input()
-#             save_video_urls_button()
-
-#             if st.session_state.get("video_urls_list"):
-#                 for video_url in st.session_state["video_urls_list"]:
-#                     st.markdown(embed_video(video_url), unsafe_allow_html=True)
 
 # widgets for personalization
 def user_personalization_widgets():

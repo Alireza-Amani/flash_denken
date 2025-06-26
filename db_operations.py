@@ -73,11 +73,12 @@ CREATE INDEX idx_thought_scenarios_is_user_created ON thought_scenarios(is_user_
 
 
 -- Table for storing the practice sessions
+--- have to add a result column, to store the result of the practice session
 CREATE TABLE IF NOT EXISTS practice_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     word_id INTEGER NOT NULL,
     session_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
+    success INTEGER NOT NULL, -- Indicates if the practice session was successful
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
 );
 
@@ -704,25 +705,18 @@ def save_user_thought_scenario(
         print(f"Unexpected error: {e}")
 
 
-def get_words_practice_tables() -> tuple[DataFrame, DataFrame, DataFrame]:
+def get_words_practice_tables():
     """
     Fetches the 'words', 'practice_sessions', and 'recall_prompts' tables from the SQLite database
-    and returns them as pandas DataFrames.
-
-    Returns
-    -------
-    tuple[DataFrame, DataFrame, DataFrame]
-        A tuple containing three DataFrames:
-        - The first DataFrame contains data from the 'words' table.
-        - The second DataFrame contains data from the 'practice_sessions' table.
-        - The third DataFrame contains data from the 'recall_prompts' table.
+    and returns them as pandas DataFrames. It will update the session state with these DataFrames.
     """
 
     db_path = st.session_state["parameters"].db_path
     statement_1 = """
     SELECT
         w.id, w.word, w.part_of_speech, w.definition,
-        w.created_at, w.learned_at, w.ebisu_last_tested_at
+        w.created_at, w.learned_at, w.ebisu_last_tested_at,
+        w.ebisu_alpha, w.ebisu_beta, w.ebisu_halflife
     FROM words w
     ORDER BY w.created_at DESC;
     """
@@ -770,15 +764,16 @@ def get_words_practice_tables() -> tuple[DataFrame, DataFrame, DataFrame]:
         recall_prompts_df['last_used_at'] = pd.to_datetime(
             recall_prompts_df['last_used_at'], format=dt_format)
 
-        return words_df, practice_df, recall_prompts_df
+        st.session_state["words_table_df"] = words_df
+        st.session_state["practice_table_df"] = practice_df
+        st.session_state["recall_prompts_table_df"] = recall_prompts_df
+
     except sqlite3.Error as e:
         print("inside get_words_practice_tables 1")
         print(f"Database error: {e}")
-        return DataFrame(), DataFrame(), DataFrame()
     except Exception as e:
         print("inside get_words_practice_tables 2")
         print(f"Unexpected error: {e}")
-        return DataFrame(), DataFrame(), DataFrame()
 
 # find ids, given words
 
@@ -1036,11 +1031,13 @@ def load_n_prompts_for_words(word_ids: List[int], n: int = 3) -> Dict[int, List[
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             for word_id in word_ids:
+                # random n prompts for each word_id
                 cursor.execute(
                     """
                     SELECT prompt_json, word_id
                     FROM recall_prompts
                     WHERE word_id = ?
+                    ORDER BY RANDOM()
                     LIMIT ?
                     """,
                     (word_id, n)
@@ -1053,8 +1050,10 @@ def load_n_prompts_for_words(word_ids: List[int], n: int = 3) -> Dict[int, List[
             print(f"Loaded prompts for {len(prompts_by_word)} words.")
 
     except sqlite3.Error as e:
+        print("inside load_n_prompts_for_words")
         print(f"Database error during load: {e}")
     except Exception as e:
+        print("inside load_n_prompts_for_words 2")
         print(f"An unexpected error occurred during load: {e}")
 
     return prompts_by_word

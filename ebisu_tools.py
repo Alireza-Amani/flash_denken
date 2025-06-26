@@ -4,7 +4,7 @@ import math
 import pandas as pd
 import ebisu
 import streamlit as st
-#   
+
 
 SECONDS_IN_HOUR = 3600
 
@@ -39,7 +39,7 @@ def predict_row(row: pd.Series, exact: bool = True) -> float:
     return probability
 
 
-def calculate_all_recall_probabilities_from_db(exact: bool = True) -> pd.DataFrame:
+def calculate_all_recall_probabilities_from_db(exact: bool = True):
     """
     Fetches all words from the database, calculates their current recall
     probability using Ebisu, and returns the results in a DataFrame.
@@ -66,6 +66,7 @@ def calculate_all_recall_probabilities_from_db(exact: bool = True) -> pd.DataFra
                 """
                 SELECT
                     w.id AS word_id,
+                    w.word,
                     w.ebisu_alpha,
                     w.ebisu_beta,
                     w.ebisu_halflife,
@@ -107,9 +108,76 @@ def calculate_all_recall_probabilities_from_db(exact: bool = True) -> pd.DataFra
         lambda row: predict_row(row, exact=exact), axis=1
     )
 
-    # 7. Final result: Select and sort the final columns.
-    result_df = df[['word_id', 'recall_probability']].sort_values(
+    # 7. Final result: sort the DataFrame by recall probability.
+    result_df = df.sort_values(
         by='recall_probability', ascending=True
     ).reset_index(drop=True)
 
-    return result_df
+    st.session_state.recall_probabilities_df = result_df
+
+
+def update_ebisu_parameters_in_db(word_id: int):
+    """Updates the Ebisu parameters for a word in the database.
+
+    Parameters
+    ----------
+    word_id : int
+        The ID of the word to update.
+    """
+
+    # first calculate the new parameters
+    word_ebisu = st.session_state.recall_words_ebisu_dict[word_id]
+    new_prior = ebisu.updateRecall(
+        prior=(word_ebisu["ebisu_alpha"],
+               word_ebisu["ebisu_beta"],
+               word_ebisu["ebisu_halflife"]),
+        successes=word_ebisu["result"],
+        tnow=word_ebisu["time_elapsed_hours"],
+        total=1,
+    )
+
+    new_alpha, new_beta, new_halflife = new_prior
+
+    # then update the database
+    # for words table, update the parameters + last tested at
+    # for practice_sessions table, insert a new session record
+
+    db_path = st.session_state.parameters.db_path
+    current_time = pd.Timestamp.now()
+    format_ = st.session_state.parameters.datetime_format
+    current_time_str = current_time.strftime(format_)
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # Update the words table
+            cursor.execute(
+                """
+                UPDATE words
+                SET ebisu_alpha = ?, ebisu_beta = ?, ebisu_halflife = ?,
+                    ebisu_last_tested_at = ?
+                WHERE id = ?
+                """,
+                (new_alpha, new_beta, new_halflife, current_time_str, word_id)
+            )
+
+            # Insert a new practice session record
+            cursor.execute(
+                """
+                INSERT INTO practice_sessions (word_id, session_date, success)
+                VALUES (?, ?, ?)
+                """,
+                (word_id, current_time_str, word_ebisu["result"])
+            )
+
+            conn.commit()
+
+            print(
+                f"Updated Ebisu parameters for word ID {word_id} successfully.")
+
+    except sqlite3.Error as e:
+        print(f"Database update error: {e}")
+
+    except Exception as e:
+        print(f"An error occurred while updating the database: {e}")

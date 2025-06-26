@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     word_id INTEGER NOT NULL,
     session_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
+    success INTEGER NOT NULL, -- Indicates if the practice session was successful
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
 );
 

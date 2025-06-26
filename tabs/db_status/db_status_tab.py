@@ -3,6 +3,7 @@
 import streamlit as st
 from db_operations import get_words_practice_tables
 from tabs.db_status.db_status_tab_widgets import show_dataframes_button_db_status_tab
+from ebisu_tools import calculate_all_recall_probabilities_from_db
 
 
 def render_db_status_tab():
@@ -10,13 +11,20 @@ def render_db_status_tab():
     show_dataframes_button_db_status_tab()
 
     if st.session_state.get("trigger_show_dataframes", False):
-        words_df, practice_df, recall_prompts_df = get_words_practice_tables()
+        get_words_practice_tables()
+        # lets add recall probabilities to the words_df
+        calculate_all_recall_probabilities_from_db()
         st.write("Words DataFrame:")
-        st.dataframe(words_df)
+        st.dataframe(st.session_state.get("words_table_df"))
+        st.divider()
         st.write("Practice Sessions DataFrame:")
-        st.dataframe(practice_df)
+        st.dataframe(st.session_state.get("practice_table_df"))
+        st.divider()
+        st.write("Recall Probabilities DataFrame:")
+        st.dataframe(st.session_state.get("recall_probabilities_df"))
+        st.divider()
         st.write("Recall Prompts DataFrame:")
-        st.dataframe(recall_prompts_df)
+        st.dataframe(st.session_state.get("recall_prompts_table_df"))
     else:
         st.write("Klik op de knop hieronder om de dataframes te tonen.")
 
