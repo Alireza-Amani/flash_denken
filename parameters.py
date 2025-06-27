@@ -41,6 +41,11 @@ class Parameters:
     # datetime format for storing in the database
     datetime_format: str = "%Y-%m-%d %H:%M:%S"
 
+    # ebisu parameters
+    ebisu_alpha: float = 4.0
+    ebisu_beta: float = 4.0
+    ebisu_half_life: int = 24  # hours
+
     def __post_init__(self):
         # Ensure the file exists
         if not self.db_path.exists():

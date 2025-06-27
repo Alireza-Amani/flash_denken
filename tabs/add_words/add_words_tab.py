@@ -4,7 +4,7 @@ from tabs.add_words.add_words_tab_widgets import (
     word_input_addtab, generate_analyses_button_addtab,
     save_analyses_to_db_button_addtab,
     generate_recall_prompts_button_addtab, save_recall_prompts_to_db_button_addtab,
-    words_without_prompt_button_addtab,
+    words_without_prompt_button_addtab, ebisu_parameters_input_addtab,
 )
 
 
@@ -39,9 +39,10 @@ def render_add_words_tab():
     # a button to save the recall prompts to the database
     save_recall_prompts_to_db_button_addtab()
 
-    ## an expander for adding prompts for words not in the prompt table
+    # an expander for adding prompts for words not in the prompt table
     with st.expander("Voeg prompts toe voor woorden die nog niet in de promptentabel staan"):
         st.caption(
             "Hier kun je handmatig prompts toevoegen voor woorden die nog niet in de promptentabel staan."
         )
         words_without_prompt_button_addtab()
+        ebisu_parameters_input_addtab()

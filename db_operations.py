@@ -264,6 +264,9 @@ def save_analysis_result_to_db(analysis_result: 'AnalysisResult'):
     analysis_result : AnalysisResult
         The AnalysisResult object containing word analyses to be saved.
 
+    **kwargs : dict
+        Additional parameters to customize the saving process.
+
     Raises
     ------
     sqlite3.Error
@@ -332,7 +335,10 @@ def _upsert_word(cursor: sqlite3.Cursor, word_analysis) -> int | None:
         "synonyms_json": json.dumps(word_analysis.relations.synonyms),
         "antonyms_json": json.dumps(word_analysis.relations.antonyms),
         "collocations_json": json.dumps(word_analysis.relations.collocations),
-        "created_at": current_time
+        "created_at": current_time,
+        "ebisu_alpha": float(st.session_state["ebisu_alpha_input_key"]),
+        "ebisu_beta": float(st.session_state["ebisu_beta_input_key"]),
+        "ebisu_halflife": float(st.session_state["ebisu_half_life_input_key"]),
     }
 
     columns = ', '.join(word_data.keys())
@@ -385,10 +391,12 @@ def _upsert_word(cursor: sqlite3.Cursor, word_analysis) -> int | None:
                 print(
                     f"Error: Could not retrieve ID for existing word '{word_analysis.word}'.")
                 return None
-    except json.JSONEncodeError as e:
+    except TypeError as e:
+        print("inside _upsert_word")
         print(f"JSON encoding error for word '{word_analysis.word}': {e}")
         return None
     except sqlite3.Error as e:
+        print("inside _upsert_word")
         print(
             f"SQLite error during word upsert for '{word_analysis.word}': {e}")
         return None

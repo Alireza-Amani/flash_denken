@@ -187,3 +187,52 @@ def words_without_prompt_button_addtab():
         use_container_width=True,
         key="words_without_prompt_button_addtab_key"
     )
+
+
+# three input numbers for ebisu parameters
+# they will be used to save the words in the database with different parameters
+
+def ebisu_parameters_input_addtab():
+    """Input fields for Ebisu parameters."""
+    st.caption(
+        "Voer de Ebisu parameters in voor de nieuwe woorden. "
+        "Deze worden gebruikt om de woorden op te slaan in de database."
+    )
+    st.number_input(
+        "Alpha ",
+        min_value=2.0,
+        max_value=10.0,
+        step=0.1,
+        format="%.1f",
+        value=st.session_state["parameters"].ebisu_alpha,
+        key="ebisu_alpha_input_key",
+        help="De alpha parameter voor Ebisu. "
+             "Hoe hoger de waarde, hoe sneller de woorden worden geleerd.",
+        label_visibility="collapsed",
+    )
+
+    st.number_input(
+        "Beta ",
+        min_value=2.0,
+        max_value=10.0,
+        step=0.1,
+        format="%.1f",
+        value=st.session_state["parameters"].ebisu_beta,
+        key="ebisu_beta_input_key",
+        help="De beta parameter voor Ebisu. "
+             "Hoe hoger de waarde, hoe sneller de woorden worden vergeten.",
+        label_visibility="collapsed",
+    )
+
+    st.number_input(
+        "Half-life (in uren) ",
+        min_value=1,
+        max_value=100,
+        step=1,
+        format="%d",
+        value=st.session_state["parameters"].ebisu_half_life,
+        key="ebisu_half_life_input_key",
+        help="De half-life parameter voor Ebisu. "
+             "Hoe hoger de waarde, hoe langer het duurt voordat de woorden worden vergeten.",
+        label_visibility="collapsed",
+    )
