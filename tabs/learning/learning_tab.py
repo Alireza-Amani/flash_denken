@@ -30,10 +30,11 @@ def render_learning_tab():
 
     if st.session_state.get("start_learning_session", None):
         idx = st.session_state.get("current_word_idx_to_learn", 0)
-        word_id = st.session_state["word_ids_to_learn_list"][idx]
+        word_id = list(
+            st.session_state["words_in_learning_status_dict"].keys())[idx]
         get_user_media(word_id)
 
-        word_analysis = st.session_state["word_analyses_to_learn_list"][idx]
+        word_analysis = st.session_state["words_in_learning_status_dict"][word_id]["word_analysis"]
         st.session_state["word_analysis_to_learn"] = word_analysis
         st.html(generate_word_html_design(word_analysis))
         st.divider()
@@ -47,6 +48,10 @@ def render_learning_tab():
         st.divider()
 
         user_personalization_widgets()
+
+        if st.session_state.get("user_thought_scenario_saved", False):
+            st.session_state["user_thought_scenario_saved"] = False
+            st.rerun()
 
         st.divider()
         mark_word_learned_button()

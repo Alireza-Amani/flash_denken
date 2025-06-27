@@ -52,7 +52,7 @@ stvar_bool = [
 
     # related to the process of learning words
     "start_learning_session",
-    "current_word_is_learned",
+    "user_thought_scenario_saved",
 
     # a couple of flags to finalize learning of a word
     "thought_scenario_created",
@@ -68,6 +68,7 @@ stvar_bool = [
 ]
 
 stvar_dict = [
+    "words_in_learning_status_dict",  # Dict[int, bool] id: learned or not
     "current_word_user_media_dict",  # Dict[int, Dict[str, str]]
     "prompts_to_recall_dict",  # Dict[int, List[EnkelePrompt]]
     "recall_words_ebisu_dict",

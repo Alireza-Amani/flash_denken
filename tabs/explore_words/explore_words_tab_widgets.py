@@ -20,7 +20,7 @@ def word_or_integer_input_explore_tab():
         st.session_state["trigger_retrieve_explore_word_from_db"] = True
     except ValueError:
         st.session_state["word_to_explore"] = input_value
-        potential_id = get_ids_given_words([input_value])
+        potential_id = list(get_ids_given_words([input_value]).keys())
         if potential_id:
             st.session_state["word_id_to_explore"] = potential_id[0]
         else:

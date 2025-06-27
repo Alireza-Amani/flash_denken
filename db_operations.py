@@ -786,7 +786,7 @@ def get_words_practice_tables():
 # find ids, given words
 
 
-def get_ids_given_words(words: List[str]) -> List[int]:
+def get_ids_given_words(words: List[str]) -> Dict[int, Dict[str, object]]:
     """
     Fetches the IDs of the given words from the 'words' table in the SQLite database.
 
@@ -797,14 +797,13 @@ def get_ids_given_words(words: List[str]) -> List[int]:
 
     Returns
     -------
-    List[int]
-        A list of IDs corresponding to the provided words.
-        If a word is not found, its ID will be None.
+    Dict[int, Dict[str, object]]
+        A dictionary mapping word IDs to their corresponding word information.
     """
     db_path = st.session_state["parameters"].db_path
 
     if not words:
-        return []
+        return {}
     else:
         words = [word.strip().lower() for word in words if word.strip()]
 
@@ -814,15 +813,18 @@ def get_ids_given_words(words: List[str]) -> List[int]:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                f"SELECT id FROM words WHERE word IN ({placeholders})", words)
-            ids = [row[0] for row in cursor.fetchall()]
-        return ids
+                f"SELECT id, word FROM words WHERE word IN ({placeholders})", words)
+            rows = cursor.fetchall()
+            ids_words_dict: Dict[int, Dict[str, object]] = {row[0]: {"word": row[1],
+                                                                     "learned": False} for row in rows}
+
+        return ids_words_dict
     except sqlite3.Error as e:
         print(f"Database error: {e}")
-        return []
+        return {}
     except Exception as e:
         print(f"Unexpected error: {e}")
-        return []
+        return {}
 
 
 def sample_words_to_learn(number_of_words: int) -> List[WordAnalysis]:
@@ -876,6 +878,8 @@ def mark_word_as_learned(word_id: int):
         The ID of the word to mark as learned.
     """
     db_path = st.session_state["parameters"].db_path
+    current_time = datetime.datetime.now().strftime(
+        st.session_state["parameters"].datetime_format)
 
     try:
         with sqlite3.connect(db_path) as conn:
@@ -883,10 +887,10 @@ def mark_word_as_learned(word_id: int):
             cursor.execute(
                 """
                 UPDATE words
-                SET learned_at = CURRENT_TIMESTAMP
+                SET learned_at = ?
                 WHERE id = ?
                 """,
-                (word_id,)
+                (current_time, word_id)
             )
             conn.commit()
             print(f"Word ID {word_id} marked as learned.")
@@ -1134,3 +1138,97 @@ def get_word_ids_and_ebisu_params() -> List[Tuple[int, float, float, float, str,
     except Exception as e:
         print(f"Unexpected error: {e}")
         return []
+
+# lets have two functions
+# first: give me a list of IDs, and I remove those words and their corresponding
+# material from the database
+
+# second, give me list of words, and I remove those words and their corresponding
+
+
+def remove_words_by_ids(word_ids: List[int]) -> None:
+    """
+    Removes words and their associated data from the database based on a list of word IDs.
+
+    Parameters
+    ----------
+    word_ids : List[int]
+        A list of word IDs to remove from the database.
+    """
+    if not word_ids:
+        print("No word IDs provided for removal.")
+        return
+
+    db_path = st.session_state["parameters"].db_path
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # Delete thought scenarios first to maintain referential integrity
+            cursor.execute(
+                "DELETE FROM thought_scenarios WHERE word_id IN ({})".format(
+                    ','.join('?' * len(word_ids))),
+                word_ids
+            )
+
+            # Delete from recall_prompts table
+            cursor.execute(
+                "DELETE FROM recall_prompts WHERE word_id IN ({})".format(
+                    ','.join('?' * len(word_ids))),
+                word_ids
+            )
+
+            # Delete from practice_sessions table
+            cursor.execute(
+                "DELETE FROM practice_sessions WHERE word_id IN ({})".format(
+                    ','.join('?' * len(word_ids))),
+                word_ids
+            )
+
+            # Delete from user_media table
+            cursor.execute(
+                "DELETE FROM user_media WHERE word_id IN ({})".format(
+                    ','.join('?' * len(word_ids))),
+                word_ids
+            )
+
+            # Finally, delete from words table
+            cursor.execute(
+                "DELETE FROM words WHERE id IN ({})".format(
+                    ','.join('?' * len(word_ids))),
+                word_ids
+            )
+
+            conn.commit()
+            print(f"Removed {len(word_ids)} words and their associated data.")
+
+    except sqlite3.Error as e:
+        print("inside remove_words_by_ids")
+        print(f"Database error during removal: {e}")
+    except Exception as e:
+        print("inside remove_words_by_ids 2")
+        print(f"Unexpected error during removal: {e}")
+
+
+def remove_words_by_terms(terms: List[str]) -> None:
+    """
+    Removes words and their associated data from the database based on a list of terms.
+
+    Parameters
+    ----------
+    terms : List[str]
+        A list of terms (words) to remove from the database.
+    """
+    if not terms:
+        print("No terms provided for removal.")
+        return
+
+    # Get IDs for the provided terms
+    word_ids = list(get_ids_given_words(terms).keys())
+    if not word_ids:
+        print("No matching words found for the provided terms.")
+        return
+
+    # Call the function to remove by IDs
+    remove_words_by_ids(word_ids)

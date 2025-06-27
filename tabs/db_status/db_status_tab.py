@@ -2,7 +2,9 @@
 
 import streamlit as st
 from db_operations import get_words_practice_tables
-from tabs.db_status.db_status_tab_widgets import show_dataframes_button_db_status_tab
+from tabs.db_status.db_status_tab_widgets import (
+    show_dataframes_button_db_status_tab, show_danger_zone
+)
 from ebisu_tools import calculate_all_recall_probabilities_from_db
 
 
@@ -28,6 +30,14 @@ def render_db_status_tab():
     else:
         st.write("Klik op de knop hieronder om de dataframes te tonen.")
 
+    # this st.empty() is used to create space between the dataframes and the next section
+    st.empty()
+    # a danger area, for removing some data from database, based on ID or word
+    with st.expander(
+        "Gevarenzone: Verwijder Woorden uit de Database", expanded=False,
+        icon=":material/delete:"
+    ):
+        show_danger_zone()
 
 # this tab could use another table, where the user will select a learning package,
 #  grounded on SRS.

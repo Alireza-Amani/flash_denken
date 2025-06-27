@@ -4,6 +4,7 @@ from PIL import Image
 import streamlit as st
 from db_operations import (
     save_user_thought_scenario, sample_words_to_learn, save_user_media_to_db,
+    load_word_analyses_by_ids,
     get_ids_given_words, load_user_media, mark_word_as_learned,
 )
 from output_models import ThoughtScenario
@@ -25,7 +26,7 @@ def next_prev_callback(direction: int):
     """
     current_idx = st.session_state["current_word_idx_to_learn"]
     new_idx = wrap_around_index(current_idx, direction, len(
-        st.session_state["word_analyses_to_learn_list"]))
+        st.session_state["words_in_learning_status_dict"]))
     st.session_state["current_word_idx_to_learn"] = new_idx
 
 
@@ -82,17 +83,24 @@ def input_number_of_words_to_learn():
 def sample_words_to_learn_callback():
     """
     Callback to sample words to learn.
-    This function samples a specified number of words from the `word_analyses_to_learn_list`
-    and updates the session state with the sampled words.
+    This function samples a specified number of words from the database and updates the session state
+    with the sampled words and their IDs. It also initializes the learning status dictionary for the words.
     """
+
     number_of_words = st.session_state.get("number_of_words_to_learn", 0)
     st.session_state["word_analyses_to_learn_list"] = sample_words_to_learn(
         number_of_words=number_of_words
     )
 
-    st.session_state["word_ids_to_learn_list"] = get_ids_given_words(
+    st.session_state["words_in_learning_status_dict"] = get_ids_given_words(
         [wa.word for wa in st.session_state["word_analyses_to_learn_list"]]
     )
+
+    # now add word analyses to the dict and its corresponding IDs
+    for word_analysis in st.session_state["word_analyses_to_learn_list"]:
+        for id_ in st.session_state["words_in_learning_status_dict"]:
+            if st.session_state["words_in_learning_status_dict"][id_]["word"] == word_analysis.word:
+                st.session_state["words_in_learning_status_dict"][id_]["word_analysis"] = word_analysis
 
 
 def sample_words_to_learn_button():
@@ -155,8 +163,7 @@ def end_learning_session_callback():
     st.session_state["start_learning_session"] = False
     st.session_state["current_word_idx_to_learn"] = 0
     st.session_state["word_analyses_to_learn_list"] = []
-
-    # save ...
+    st.session_state["words_in_learning_status_dict"] = {}
 
 
 def end_learning_session_button():
@@ -227,8 +234,6 @@ def user_thought_scenario_input():
         args=("user_thought_expression_input_key", "user_thought_expression")
     )
 
-# user input cleanup
-
 
 def user_thought_input_cleanup():
     """Cleans up the user thought input fields by resetting their values."""
@@ -247,11 +252,20 @@ def save_user_thought_callback():
         expression=st.session_state["user_thought_expression_input_key"],
     )
     idx = st.session_state.get("current_word_idx_to_learn", 0)
-    word_id = st.session_state["word_ids_to_learn_list"][idx]
+    word_id = list(
+        st.session_state["words_in_learning_status_dict"].keys()
+    )[idx]
     save_user_thought_scenario(
         word_id, thought_scenario)
     st.session_state["thought_scenario_created"] = True
+    st.session_state["user_thought_scenario_saved"] = True
     user_thought_input_cleanup()
+
+    # re-retrieve word analysis to reflect the saved thought scenario for the word
+    updated_analysis = load_word_analyses_by_ids(
+        [word_id]
+    )[0]
+    st.session_state["words_in_learning_status_dict"][word_id]["word_analysis"] = updated_analysis
 
 
 def save_user_thought_button():
@@ -272,20 +286,24 @@ def save_user_thought_button():
 def mark_word_learned_callback():
     """Callback to mark the current word as learned."""
     word_id_idx = st.session_state.get("current_word_idx_to_learn", 0)
-    word_id = st.session_state["word_ids_to_learn_list"][word_id_idx]
+    word_id = list(
+        st.session_state["words_in_learning_status_dict"].keys()
+    )[word_id_idx]
     if word_id is not None:
         mark_word_as_learned(word_id)
-    st.session_state["current_word_is_learned"] = True
+        st.session_state["words_in_learning_status_dict"][word_id]["learned"] = True
 
 
 def mark_word_learned_button():
     """Renders a button to mark the current word as learned."""
+    word_id = list(
+        st.session_state["words_in_learning_status_dict"].keys()
+    )[st.session_state["current_word_idx_to_learn"]]
+
     is_disabled = (
         not st.session_state.get("start_learning_session", False) or
-        st.session_state.get("current_word_is_learned", False)  # or
-        # not st.session_state.get("thought_scenario_created", False) or
-        # not st.session_state.get("image_added", False) or
-        # not st.session_state.get("video_added", False)
+        st.session_state["words_in_learning_status_dict"].get(word_id, False)[
+            "learned"]
     )
     st.button(
         "Markeer woord als geleerd",
@@ -350,7 +368,10 @@ def save_resize_image_callback():
         image.save(save_path)
 
         # save the image to the database
-        word_id = st.session_state["word_ids_to_learn_list"][st.session_state["current_word_idx_to_learn"]]
+        word_idx = st.session_state.get("current_word_idx_to_learn", 0)
+        word_id = list(
+            st.session_state["words_in_learning_status_dict"].keys()
+        )[word_idx]
         save_user_media_to_db(
             word_id=word_id,
             content_url=save_path,
@@ -441,7 +462,9 @@ def get_user_media(word_id: int):
 
 def save_video_urls_callback():
     """Callback function to save video URLs to the database."""
-    word_id = st.session_state["word_ids_to_learn_list"][st.session_state["current_word_idx_to_learn"]]
+    word_id = list(
+        st.session_state["words_in_learning_status_dict"].keys()
+    )[st.session_state["current_word_idx_to_learn"]]
     for video_url in st.session_state.get("video_urls_list", []):
         if is_valid_video_url(video_url):
             save_user_media_to_db(
