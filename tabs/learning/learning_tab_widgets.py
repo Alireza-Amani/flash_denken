@@ -259,6 +259,7 @@ def save_user_thought_callback():
         word_id, thought_scenario)
     st.session_state["thought_scenario_created"] = True
     st.session_state["user_thought_scenario_saved"] = True
+    print(f"Thought scenario saved for word ID {word_id}: {thought_scenario}")
     user_thought_input_cleanup()
 
     # re-retrieve word analysis to reflect the saved thought scenario for the word
@@ -293,6 +294,11 @@ def mark_word_learned_callback():
         mark_word_as_learned(word_id)
         st.session_state["words_in_learning_status_dict"][word_id]["learned"] = True
 
+        # set the flags to False for the next word
+        st.session_state["thought_scenario_created"] = False
+        st.session_state["image_added"] = False
+        st.session_state["video_added"] = False
+
 
 def mark_word_learned_button():
     """Renders a button to mark the current word as learned."""
@@ -303,7 +309,11 @@ def mark_word_learned_button():
     is_disabled = (
         not st.session_state.get("start_learning_session", False) or
         st.session_state["words_in_learning_status_dict"].get(word_id, False)[
-            "learned"]
+            "learned"] or
+        # now check the flags
+        not st.session_state.get("thought_scenario_created", False) or
+        not st.session_state.get("image_added", False) or
+        not st.session_state.get("video_added", False)
     )
     st.button(
         "Markeer woord als geleerd",

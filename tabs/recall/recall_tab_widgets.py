@@ -17,7 +17,7 @@ def recall_prob_threshold_input():
         label="Recall Probability Threshold (%)",
         min_value=0,
         max_value=100,
-        value=80,
+        value=60,
         step=1,
         key="recall_prob_threshold_key",
         help="Stel de drempelwaarde in voor de herinneringskans. "
@@ -130,7 +130,7 @@ def start_recall_session_button():
 
     is_disabled = (
         st.session_state.start_recall_session or
-        not len(st.session_state.word_ids_to_recall_list)
+        not len(st.session_state.word_ids_to_recall_list) > 0
     )
     st.button(
         "Start Herinneringsessie",

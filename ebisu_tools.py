@@ -66,7 +66,6 @@ def calculate_all_recall_probabilities_from_db(exact: bool = True):
                 """
                 SELECT
                     w.id AS word_id,
-                    w.word,
                     w.ebisu_alpha,
                     w.ebisu_beta,
                     w.ebisu_halflife,

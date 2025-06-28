@@ -1,4 +1,5 @@
 '''Functions for interacting with the Gemini API.'''
+import sqlite3
 from google import genai
 import streamlit as st
 from utils import parse_comparisons_string_to_dict, chunk_list, parse_stringified_dict
@@ -85,27 +86,33 @@ def generate_word_analysis(word_list: list[str]) -> AnalysisResult:
             print(
                 f"Er is een fout opgetreden bij het genereren van de analyses: {e}"
             )
-            return AnalysisResult(analyses=[])
+            raise e
 
-        parsed_response = response.parsed
-        print("we are inside generate_word_analysis")
-        print("-" * 80)
-        print(
-            f"{type(parsed_response[0].context.comparisons)=}: {parsed_response[0].context.comparisons}"
-        )
-        print("-" * 80)
-        pp_parsed_response = post_process_analysis(parsed_response)
-        analyses.extend(
-            [word_analysis for word_analysis in pp_parsed_response.analyses]
-        )
-        for word_analysis in pp_parsed_response.analyses:
-            print(f"Generated analysis for word: {word_analysis.word}")
-            print(word_analysis)
+        try:
+            parsed_response = response.parsed
+            print("we are inside generate_word_analysis")
+            print("-" * 80)
+            print(
+                f"{type(parsed_response[0].context.comparisons)=}: {parsed_response[0].context.comparisons}"
+            )
+            print("-" * 80)
+            pp_parsed_response = post_process_analysis(parsed_response)
+            analyses.extend(
+                [word_analysis for word_analysis in pp_parsed_response.analyses]
+            )
+            for word_analysis in pp_parsed_response.analyses:
+                print(f"Generated analysis for word: {word_analysis.word}")
+                print(word_analysis)
 
-        print(
-            f"{type(pp_parsed_response[0].context.comparisons)=}: {pp_parsed_response[0].context.comparisons}"
-        )
-        print("-" * 80)
+            print(
+                f"{type(pp_parsed_response[0].context.comparisons)=}: {pp_parsed_response[0].context.comparisons}"
+            )
+            print("-" * 80)
+        except Exception as e:
+            print(
+                f"Er is een fout opgetreden bij het verwerken van de response: {e}"
+            )
+            raise e
 
     return AnalysisResult(analyses=analyses)
 

@@ -145,9 +145,9 @@ def initialize_state():
     if "words_already_in_db_list" not in st.session_state:
         st.session_state["words_already_in_db_list"] = get_words_already_in_db()
 
-        print(
-            f"Words already in DB: {st.session_state['words_already_in_db_list']}"
-        )
+        # print(
+        #     f"Words already in DB: {st.session_state['words_already_in_db_list']}"
+        # )
 
     # default values for specific variables
     st.session_state.recall_prob_threshold = 50  # default threshold of 50%

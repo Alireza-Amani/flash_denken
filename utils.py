@@ -613,9 +613,15 @@ def prepare_youtube_url_for_streamlit(original_url: str, desired_start_seconds: 
     elif parsed_url.netloc == 'youtu.be' and parsed_url.path:
         video_id = parsed_url.path.lstrip('/')
 
+    # for shorts
+    elif parsed_url.netloc == 'www.youtube.com' and 'shorts' in parsed_url.path:
+        path_segments = [s for s in parsed_url.path.split('/') if s]
+        if len(path_segments) >= 2 and path_segments[0] == 'shorts':
+            video_id = path_segments[1]
+
     if not video_id:
-        raise ValueError(
-            f"Could not extract video ID from URL: {original_url}")
+        print(f"Error: Could not extract video ID from URL: {original_url}")
+        return ''
 
     # Determine the effective start time
     effective_start_seconds = 0

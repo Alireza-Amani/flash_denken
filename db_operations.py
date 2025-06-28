@@ -275,22 +275,21 @@ def save_analysis_result_to_db(analysis_result: 'AnalysisResult'):
         For any other unexpected errors during the process.
     """
     db_path = st.session_state["parameters"].db_path
-    try:
-        # Use 'with' statement for automatic connection closing
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+
+        try:
+            # Process each word analysis and save it to the database
             _process_word_analyses(cursor, analysis_result.analyses)
             conn.commit()
             print("---")
             print("All word analysis data saved successfully!")
-
-    except sqlite3.Error as e:
-        print(f"Database error occurred: {e}")
-        # The 'with' statement handles rollback on error by default for some contexts,
-        # but explicit rollback is safer if not all operations are atomic within the 'with' block.
-        # For simplicity with 'with', we rely on its default behavior here.
-    except Exception as e:
-        print(f"An unexpected error occurred during database operation: {e}")
+        except sqlite3.Error as e:
+            print(f"Database error occurred: {e}")
+            conn.rollback()
+        except Exception as e:
+            print(
+                f"An unexpected error occurred during database operation: {e}")
 
 
 def _process_word_analyses(cursor: sqlite3.Cursor, word_analyses: list):
@@ -684,7 +683,7 @@ def save_user_thought_scenario(
 
     # determine if the fields are not empty (less than 4 characters)
     if not all(len(field) >= 4 for field in [
-        thought_scenario.title,
+        # thought_scenario.title,
         thought_scenario.situation,
         thought_scenario.internal_monologue,
         thought_scenario.expression

@@ -39,3 +39,10 @@ with tabs[3]:
 
 with tabs[4]:
     render_db_status_tab()
+
+
+
+#NOTE:
+'''
+The thought scenarios for "gerucht" are irrelevant. 
+'''
