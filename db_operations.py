@@ -730,7 +730,7 @@ def get_words_practice_tables():
 
     statement_2 = """
     SELECT
-        ps.id, w.word, ps.session_date
+        ps.id, w.word, ps.session_date, ps.success
     FROM practice_sessions ps
     JOIN words w ON ps.word_id = w.id
     ORDER BY ps.session_date DESC;
