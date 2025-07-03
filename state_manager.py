@@ -73,6 +73,8 @@ stvar_dict = [
     "prompts_to_recall_dict",  # Dict[int, List[EnkelePrompt]]
     "recall_words_ebisu_dict",
     "current_recall_word_media_dict",  # Dict[int, Dict[str, str]]
+    "explore_word_thought_scenarios_dict",  # Dict[int, ThoughtScenario]
+    "explore_word_user_images_dict",  # Dict[int, List[UserImage]]
 ]
 
 stvar_df = [

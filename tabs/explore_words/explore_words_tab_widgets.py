@@ -1,8 +1,9 @@
 
 import streamlit as st
-from db_operations import get_ids_given_words, load_word_analyses_by_ids
-
-# i want an input field where user can enter a word or an integer
+from db_operations import (
+    get_ids_given_words, load_word_analyses_by_ids, load_thought_scenarios_by_word_id,
+    save_thought_scenarios_by_word_id, load_user_images_by_word_id, save_user_images_by_word_id,
+)
 
 
 def word_or_integer_input_explore_tab():
@@ -51,5 +52,148 @@ def retrieve_explore_word_from_db_button():
         "Haal woord op uit de database",
         key="retrieve_explore_word_from_db_button_key",
         on_click=retrieve_explore_word_from_db_callback,
+        disabled=is_disabled
+    )
+
+
+def fetch_thought_scenario_callback():
+    """Callback to fetch the thought scenario for the word to explore."""
+    word_id = st.session_state.get("word_id_to_explore", 0)
+    thought_scenario = load_thought_scenarios_by_word_id(word_id)
+    st.session_state["explore_word_thought_scenarios_dict"] = thought_scenario
+
+
+def fetch_thought_scenario_button():
+    """Renders a button to fetch the thought scenario for the word to explore."""
+    is_disabled = not st.session_state.get("word_id_to_explore", 0)
+    st.button(
+        "Haal gedachte scenario op",
+        key="fetch_thought_scenario_button_key",
+        on_click=fetch_thought_scenario_callback,
+        disabled=is_disabled
+    )
+
+
+def save_thought_scenario_callback():
+    """Callback to save the thought scenario for the word to explore."""
+    thought_scenarios = st.session_state.get(
+        "explore_word_thought_scenarios_dict", {})
+    for id_ in thought_scenarios:
+        thought_scenario = thought_scenarios[id_]
+        thought_scenario.title = st.session_state.get(
+            f"thought_scenario_title_{id_}", "")
+        thought_scenario.situation = st.session_state.get(
+            f"thought_scenario_description_{id_}", "")
+        thought_scenario.internal_monologue = st.session_state.get(
+            f"thought_scenario_content_{id_}", "")
+        thought_scenario.expression = st.session_state.get(
+            f"thought_scenario_expression_{id_}", "")
+    save_thought_scenarios_by_word_id(
+        st.session_state["word_id_to_explore"], thought_scenarios
+    )
+
+
+def save_thought_scenario_button():
+    """Renders a button to save the thought scenario for the word to explore."""
+    is_disabled = not st.session_state.get("word_id_to_explore", 0)
+    st.button(
+        "Sla gedachte scenario op",
+        key="save_thought_scenario_button_key",
+        on_click=save_thought_scenario_callback,
+        disabled=is_disabled
+    )
+
+
+def display_thought_scenario():
+    """Displays the thought scenario for the word to explore."""
+    # every key is a id, which is a record in the thought_scenario table
+    # put every field of the object in a text area, so that the user can modify it
+    thought_scenarios = st.session_state.get(
+        "explore_word_thought_scenarios_dict", {})
+    for id_ in thought_scenarios:
+        thought_scenario = thought_scenarios[id_]
+        st.subheader(f"Thought Scenario ID: {id_}")
+        st.text_area(
+            "title",
+            value=thought_scenario.title,
+            key=f"thought_scenario_title_{id_}",
+        )
+        st.text_area(
+            "description",
+            value=thought_scenario.situation,
+            key=f"thought_scenario_description_{id_}",
+        )
+        st.text_area(
+            "content",
+            value=thought_scenario.internal_monologue,
+            key=f"thought_scenario_content_{id_}",
+        )
+        st.text_area(
+            "expression",
+            value=thought_scenario.expression,
+            key=f"thought_scenario_expression_{id_}",
+        )
+        st.divider()
+
+# same for user media
+
+
+def fetch_user_images_callback():
+    """Callback to fetch user images for the word to explore."""
+    word_id = st.session_state.get("word_id_to_explore", 0)
+    if word_id > 0:
+        st.session_state["current_word_user_media_dict"] = load_user_images_by_word_id(
+            word_id)
+    else:
+        print("Ongeldige woord-ID opgegeven.")
+
+
+def fetch_user_images_button():
+    """Renders a button to fetch user images for the word to explore."""
+    is_disabled = not st.session_state.get("word_id_to_explore", 0)
+    st.button(
+        "Haal gebruikersafbeeldingen op",
+        key="fetch_user_images_button_key",
+        on_click=fetch_user_images_callback,
+        disabled=is_disabled
+    )
+
+
+def display_user_images():
+    """Displays user images for the word to explore."""
+    user_images = st.session_state.get("current_word_user_media_dict", {})
+    if not user_images:
+        st.write("Geen gebruikersafbeeldingen gevonden.")
+        return
+
+    for id_, user_image in user_images.items():
+        st.subheader(f"Gebruikersafbeelding ID: {id_}")
+        st.text_input(
+            "Image path",
+            value=user_image,
+            key=f"user_image_path_{id_}",
+        )
+        st.image(user_image.content_url, caption=user_image.caption)
+        st.divider()
+
+
+def save_user_images_callback():
+    """Callback to save user images for the word to explore."""
+    user_images = st.session_state.get("current_word_user_media_dict", {})
+    for id_ in user_images:
+        user_images[id_] = st.session_state.get(
+            f"user_image_path_{id_}", "")
+    save_user_images_by_word_id(
+        st.session_state["word_id_to_explore"], user_images
+    )
+
+
+def save_user_images_button():
+    """Renders a button to save user images for the word to explore."""
+    is_disabled = not st.session_state.get("word_id_to_explore", 0)
+    st.button(
+        "Sla gebruikersafbeeldingen op",
+        key="save_user_images_button_key",
+        on_click=save_user_images_callback,
         disabled=is_disabled
     )

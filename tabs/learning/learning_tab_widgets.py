@@ -312,8 +312,8 @@ def mark_word_learned_button():
             "learned"] or
         # now check the flags
         not st.session_state.get("thought_scenario_created", False) or
-        not st.session_state.get("image_added", False) or
-        not st.session_state.get("video_added", False)
+        not st.session_state.get("image_added", False)
+        # not st.session_state.get("video_added", False) # relax this condition
     )
     st.button(
         "Markeer woord als geleerd",

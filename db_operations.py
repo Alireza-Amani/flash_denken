@@ -1231,3 +1231,223 @@ def remove_words_by_terms(terms: List[str]) -> None:
 
     # Call the function to remove by IDs
     remove_words_by_ids(word_ids)
+
+# load thought scenarios by word ID
+
+
+def load_thought_scenarios_by_word_id(word_id: int) -> Dict[int, ThoughtScenario]:
+    """
+    Loads thought scenarios for a specific word ID from the database.
+
+    Parameters
+    ----------
+    word_id : int
+        The ID of the word for which to load thought scenarios.
+
+    Returns
+    -------
+    Dict[int, ThoughtScenario]
+        A dictionary mapping ID to a ThoughtScenario object.
+        If no scenarios are found, returns an empty dictionary.
+    """
+    db_path = st.session_state["parameters"].db_path
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, title, situation, internal_monologue, expression
+                FROM thought_scenarios
+                WHERE word_id = ?
+                """,
+                (word_id,)
+            )
+            rows = cursor.fetchall()
+
+        thought_scenarios: Dict[int, ThoughtScenario] = {}
+        for row in rows:
+            try:
+                thought_scenario = ThoughtScenario(
+                    title=row[1],
+                    situation=row[2],
+                    internal_monologue=row[3],
+                    expression=row[4]
+                )
+                thought_scenarios[row[0]] = thought_scenario
+            except pydantic.ValidationError as e:
+                print(
+                    f"Pydantic validation error for thought scenario (ID: {row[0]}): {e}")
+            except Exception as e:
+                print(
+                    f"Error processing thought scenario (ID: {row[0]}): {e}")
+
+        return thought_scenarios
+
+    except sqlite3.Error as e:
+        print(f"Database error during loading thought scenarios: {e}")
+        return {}
+    except Exception as e:
+        print(f"Unexpected error during loading thought scenarios: {e}")
+        return {}
+
+
+# basically update the records
+# if corresponding value's title is "DELETE",
+# we will delete the record from the table
+# get the dict from the previous function, which has the id for the record in the talbe
+def save_thought_scenarios_by_word_id(
+    word_id: int, thought_scenarios: Dict[int, ThoughtScenario]
+) -> None:
+    """Updates thought scenarios for a specific word ID in the database.
+
+    Parameters
+    ----------
+    word_id : int
+        The ID of the word for which to update thought scenarios.
+    thought_scenarios : Dict[int, ThoughtScenario]
+        A dictionary mapping scenario IDs to ThoughtScenario objects.
+        If a scenario's title is "DELETE", it will be removed from the database.
+    """
+    db_path = st.session_state["parameters"].db_path
+
+    if not thought_scenarios:
+        print("No thought scenarios provided for update.")
+        return
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # First, delete scenarios that are marked for deletion
+            to_delete_ids = [
+                scenario_id for scenario_id, scenario in thought_scenarios.items()
+                if scenario.title == "DELETE"
+            ]
+            if to_delete_ids:
+                cursor.execute(
+                    "DELETE FROM thought_scenarios WHERE id IN ({})".format(
+                        ','.join('?' * len(to_delete_ids))),
+                    to_delete_ids
+                )
+                print(f"Deleted {len(to_delete_ids)} thought scenarios.")
+
+            # Now, insert or update the remaining scenarios
+            for scenario_id, scenario in thought_scenarios.items():
+                if scenario.title != "DELETE":
+                    cursor.execute(
+                        """
+                        INSERT INTO thought_scenarios (id, word_id, title, situation, internal_monologue, expression)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                            title = excluded.title,
+                            situation = excluded.situation,
+                            internal_monologue = excluded.internal_monologue,
+                            expression = excluded.expression
+                        """,
+                        (scenario_id, word_id, scenario.title,
+                         scenario.situation, scenario.internal_monologue, scenario.expression)
+                    )
+
+            conn.commit()
+            print(f"Updated thought scenarios for word ID {word_id}.")
+
+    except sqlite3.Error as e:
+        print(f"Database error during saving thought scenarios: {e}")
+    except Exception as e:
+        print(f"Unexpected error during saving thought scenarios: {e}")
+
+# same for user image
+
+
+# id, image_path
+def load_user_images_by_word_id(word_id: int) -> Dict[int, str]:
+    """Loads user images associated with a specific word ID from the database.
+
+    Parameters
+    ----------
+    word_id : int
+        The ID of the word for which to load user images.
+
+    Returns
+    -------
+    Dict[int, str]
+        A dictionary mapping image IDs to their file paths.
+    """
+    db_path = st.session_state["parameters"].db_path
+    user_images: Dict[int, str] = {}
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, content_url FROM user_images WHERE word_id = ? AND content_type = 'image'",
+                (word_id,)
+            )
+            rows = cursor.fetchall()
+            for row in rows:
+                user_images[row[0]] = row[1]
+    except sqlite3.Error as e:
+        print(f"Database error during loading user images: {e}")
+    except Exception as e:
+        print(f"Unexpected error during loading user images: {e}")
+
+    return user_images
+
+
+def save_user_images_by_word_id(
+    word_id: int, user_images: Dict[int, str]
+) -> None:
+    """Saves or updates user images associated with a specific word ID in the database.
+
+    Parameters
+    ----------
+    word_id : int
+        The ID of the word for which to save user images.
+    user_images : Dict[int, str]
+        A dictionary mapping image IDs to their file paths.
+        If an image's path is "DELETE", it will be removed from the database.
+    """
+    db_path = st.session_state["parameters"].db_path
+
+    if not user_images:
+        print("No user images provided for update.")
+        return
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # First, delete images that are marked for deletion
+            to_delete_ids = [
+                image_id for image_id, image_path in user_images.items()
+                if image_path == "DELETE"
+            ]
+            if to_delete_ids:
+                cursor.execute(
+                    "DELETE FROM user_images WHERE id IN ({})".format(
+                        ','.join('?' * len(to_delete_ids))),
+                    to_delete_ids
+                )
+                print(f"Deleted {len(to_delete_ids)} user images.")
+
+            # Now, insert or update the remaining images
+            for image_id, image_path in user_images.items():
+                if image_path != "DELETE":
+                    cursor.execute(
+                        """
+                        INSERT INTO user_images (id, word_id, content_type, content_url)
+                        VALUES (?, ?, 'image', ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                            content_url = excluded.content_url
+                        """,
+                        (image_id, word_id, image_path)
+                    )
+
+            conn.commit()
+            print(f"Updated user images for word ID {word_id}.")
+
+    except sqlite3.Error as e:
+        print(f"Database error during saving user images: {e}")
+    except Exception as e:
+        print(f"Unexpected error during saving user images: {e}")

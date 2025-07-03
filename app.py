@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Woorden in hun context",
     page_icon=":material/school:",
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
 # initialize the state variables
 initialize_state()
@@ -41,8 +41,11 @@ with tabs[4]:
     render_db_status_tab()
 
 
+# add a sidebar with a text area in;  default hidden
 
-#NOTE:
-'''
-The thought scenarios for "gerucht" are irrelevant. 
-'''
+st.sidebar.header("Notities")
+st.sidebar.text_area(
+    "Voeg hier je notities toe",
+    key="sidebar_notes",
+    placeholder="Schrijf hier je gedachten..."
+)
