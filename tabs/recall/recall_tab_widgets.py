@@ -95,8 +95,6 @@ def select_recall_words_callback():
         }
         for word_id, row in st.session_state.recall_probabilities_df.set_index("word_id").iterrows()
     }
-    print("Recall words Ebisu dict:")
-    print(st.session_state.recall_words_ebisu_dict)
 
     # load prompts
     st.session_state.prompts_to_recall_dict = load_n_prompts_for_words(
@@ -151,6 +149,18 @@ def end_recall_session_callback():
 
     # empty the list of word analyses to recall
     st.session_state.word_ids_to_recall_list.clear()
+
+    # set the current recall word index to 0
+    st.session_state.current_recall_word_idx = 0
+
+    # empty the prompts to recall dict
+    st.session_state.prompts_to_recall_dict.clear()
+
+    # empty the recall words ebisu dict
+    st.session_state.recall_words_ebisu_dict.clear()
+
+    # clear the current recall word media dict
+    st.session_state.current_recall_word_media_dict.clear()
 
 
 def end_recall_session_button():

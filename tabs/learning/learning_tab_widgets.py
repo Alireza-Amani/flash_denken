@@ -10,7 +10,7 @@ from db_operations import (
 from output_models import ThoughtScenario
 from utils import (
     wrap_around_index, categorize_content, is_valid_video_url,
-    prepare_youtube_url_for_streamlit,
+    prepare_youtube_url_for_streamlit, sanitize_filename,
 )
 from html_generation import embed_video
 
@@ -371,10 +371,15 @@ def save_resize_image_callback():
             st.session_state["word_analysis_to_learn"].word +
             (f"_{idx}" if idx > 0 else "")
         )
+
+        # sanitize the filename
+        save_name = sanitize_filename(save_name)
+
         save_path = (
             st.session_state["parameters"].image_dir /
             f"{save_name}.jpg"
         )
+
         image.save(save_path)
 
         # save the image to the database

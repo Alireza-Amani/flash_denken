@@ -123,6 +123,7 @@ CREATE INDEX IF NOT EXISTS idx_recall_prompts_last_used_at ON recall_prompts(las
 '''
 
 import sqlite3
+import random
 import datetime
 import json
 from typing import List, TYPE_CHECKING, Dict, Optional, Tuple
@@ -1048,15 +1049,23 @@ def load_n_prompts_for_words(word_ids: List[int], n: int = 3) -> Dict[int, List[
                     SELECT prompt_json, word_id
                     FROM recall_prompts
                     WHERE word_id = ?
-                    ORDER BY RANDOM()
-                    LIMIT ?
                     """,
-                    (word_id, n)
+                    (word_id,)
                 )
                 rows = cursor.fetchall()
+                prompt_list = []
                 for row in rows:
                     prompt = EnkelePrompt.model_validate_json(row[0])
-                    prompts_by_word[row[1]].append(prompt)
+                    prompt_list.append(prompt)
+
+                # pick `n` unique random prompts
+                # shuffle the list and take the first `n` elements
+                if len(prompt_list) > n:
+                    random.shuffle(prompt_list)
+
+                prompt_list = prompt_list[:n]
+
+                prompts_by_word[word_id] = prompt_list
 
             print(f"Loaded prompts for {len(prompts_by_word)} words.")
 
@@ -1381,7 +1390,7 @@ def load_user_images_by_word_id(word_id: int) -> Dict[int, str]:
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, content_url FROM user_images WHERE word_id = ? AND content_type = 'image'",
+                "SELECT id, content_url FROM user_media WHERE word_id = ? AND content_type = 'image'",
                 (word_id,)
             )
             rows = cursor.fetchall()
@@ -1425,18 +1434,17 @@ def save_user_images_by_word_id(
             ]
             if to_delete_ids:
                 cursor.execute(
-                    "DELETE FROM user_images WHERE id IN ({})".format(
-                        ','.join('?' * len(to_delete_ids))),
-                    to_delete_ids
+                    "DELETE FROM user_media WHERE id IN ({})".format(
+                        ','.join('?' * len(to_delete_ids))), (to_delete_ids,)
                 )
-                print(f"Deleted {len(to_delete_ids)} user images.")
+                print(f"Deleted {len(to_delete_ids)} user media.")
 
-            # Now, insert or update the remaining images
+            # Now, insert or update the remaining media
             for image_id, image_path in user_images.items():
                 if image_path != "DELETE":
                     cursor.execute(
                         """
-                        INSERT INTO user_images (id, word_id, content_type, content_url)
+                        INSERT INTO user_media (id, word_id, content_type, content_url)
                         VALUES (?, ?, 'image', ?)
                         ON CONFLICT(id) DO UPDATE SET
                             content_url = excluded.content_url

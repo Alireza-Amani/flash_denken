@@ -4,11 +4,12 @@ from html_generation import generate_word_html_design
 from tabs.explore_words.explore_words_tab_widgets import (
     word_or_integer_input_explore_tab, retrieve_explore_word_from_db_button,
     fetch_thought_scenario_button, display_thought_scenario, save_thought_scenario_button,
-    fetch_user_images_button, save_user_images_button, display_user_images,
+    fetch_user_images_button, save_user_images_button, display_user_media,
 )
 from tabs.learning.learning_tab_widgets import (
-    get_user_media, display_user_images, display_user_videos,
+    get_user_media, display_user_videos,
 )
+from tabs.learning.learning_tab_widgets import display_user_images as display_user_images_ltab
 
 
 def render_explore_words_tab():
@@ -25,14 +26,14 @@ def render_explore_words_tab():
 
         st.divider()
         # display each image, if any
-        display_user_images()
+        display_user_images_ltab()
         st.divider()
         # display each video, if any
         display_user_videos()
         st.divider()
 
         # an expander for content modification
-        with st.expander("Gedachte Scenario", expanded=True):
+        with st.expander("Gedachte Scenario", expanded=False):
             fetch_thought_scenario_button()
             save_thought_scenario_button()
             display_thought_scenario()
@@ -40,4 +41,4 @@ def render_explore_words_tab():
         with st.expander("Media", expanded=False):
             fetch_user_images_button()
             save_user_images_button()
-            display_user_images()
+            display_user_media()

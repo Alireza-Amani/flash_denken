@@ -159,33 +159,50 @@ def fetch_user_images_button():
     )
 
 
-def display_user_images():
-    """Displays user images for the word to explore."""
-    user_images = st.session_state.get("current_word_user_media_dict", {})
+def display_user_media():
+    """Displays user media for the word to explore."""
+    user_media = st.session_state.get("current_word_user_media_dict", {})
+    print(f"{user_media=}")
+    user_images = user_media.get("images", [])
     if not user_images:
         st.write("Geen gebruikersafbeeldingen gevonden.")
         return
 
-    for id_, user_image in user_images.items():
-        st.subheader(f"Gebruikersafbeelding ID: {id_}")
+    user_videos = user_media.get("video", [])
+
+    for idx, image_url in enumerate(user_images):
         st.text_input(
             "Image path",
-            value=user_image,
-            key=f"user_image_path_{id_}",
+            value=image_url,
+            key=f"user_image_path_{idx}",
         )
-        st.image(user_image.content_url, caption=user_image.caption)
+        st.image(image_url)
+        st.divider()
+
+    for idx, video_url in enumerate(user_videos):
+        st.text_input(
+            "Video path",
+            value=video_url,
+            key=f"user_video_path_{idx}",
+        )
+        st.video(video_url)
         st.divider()
 
 
-def save_user_images_callback():
-    """Callback to save user images for the word to explore."""
-    user_images = st.session_state.get("current_word_user_media_dict", {})
-    for id_ in user_images:
-        user_images[id_] = st.session_state.get(
-            f"user_image_path_{id_}", "")
-    save_user_images_by_word_id(
-        st.session_state["word_id_to_explore"], user_images
-    )
+def save_user_media_callback():
+    """Callback to save user media for the word to explore."""
+    user_media = st.session_state.get("current_word_user_media_dict", {})
+    user_images = user_media.get("images", [])
+    user_videos = user_media.get("video", [])
+
+    for idx_, image_path in enumerate(user_images):
+        images_dict = {
+            int(idx_): image_path
+        }
+        save_user_images_by_word_id(
+            st.session_state["word_id_to_explore"],
+            images_dict
+        )
 
 
 def save_user_images_button():
@@ -194,6 +211,6 @@ def save_user_images_button():
     st.button(
         "Sla gebruikersafbeeldingen op",
         key="save_user_images_button_key",
-        on_click=save_user_images_callback,
+        on_click=save_user_media_callback,
         disabled=is_disabled
     )

@@ -1,5 +1,6 @@
 '''utility functions'''
 
+from pathlib import Path
 from typing import List, Dict, Any, Generator, Optional
 import ast
 import re
@@ -660,3 +661,35 @@ def prepare_youtube_url_for_streamlit(original_url: str, desired_start_seconds: 
     reconstructed_url = urlunparse(
         (new_scheme, new_netloc, new_path, '', new_query, ''))
     return reconstructed_url
+
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Sanitizes a filename by removing or replacing characters that are not allowed in filenames.
+
+    Parameters
+    ----------
+    filename : str
+        The original filename to sanitize.
+
+    Returns
+    -------
+    str
+        A sanitized version of the filename, safe for use in file systems.
+    """
+
+    # make sure we dont ruin the file extension
+    extension = Path(filename).suffix  # Get the file extension
+    # Get the name without the extension
+    name = filename[:-len(extension)] if extension else filename
+
+    # Remove or replace characters that are not allowed in filenames: "/\:*?\"<>|"
+    sanitized_name = re.sub(r'[\\/:*?"<>|]', '_', name)
+
+    # Remove leading and trailing whitespace
+    sanitized_name = sanitized_name.strip()
+
+    # reconstruct the filename with the sanitized name and original extension
+    sanitized_filename = f"{sanitized_name}{extension}"
+
+    return sanitized_filename
