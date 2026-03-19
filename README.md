@@ -85,3 +85,4 @@ The presentation layer.
     ```
     *(Note: Ensure your Google Gemini API key is configured within the application settings or environment variables).*
 ```
+(This README is co-written by me and Gemini

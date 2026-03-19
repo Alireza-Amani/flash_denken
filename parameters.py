@@ -1,5 +1,7 @@
 from pathlib import Path
 from dataclasses import dataclass
+import os
+import streamlit as st
 from google import genai
 from utils import assert_model_presence
 from instructions import WORD_ANALYSIS, RECALL_GENERATION
@@ -18,7 +20,7 @@ class Parameters:
     image_dir: Path = Path("static/images")
 
     # Google Gemini API key
-    gemini_api_key: str = "AIzaSyCPkPBX3CD82JX58qrT8PtRoSzZNLRV6sQ"
+    gemini_api_key: str = None
 
     # model name for Gemini API
     gemini_model_name: str = "gemini-2.5-flash"
@@ -50,6 +52,14 @@ class Parameters:
         # Ensure the file exists
         if not self.db_path.exists():
             raise FileNotFoundError(f"Database file not found: {self.db_path}")
+
+        if not self.gemini_api_key:
+            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+            if not self.gemini_api_key:
+                try:
+                    self.gemini_api_key = st.secrets.get("GEMINI_API_KEY")
+                except Exception:
+                    pass
 
         # ensure the API key is valid
         try:

@@ -1,5 +1,6 @@
 '''Functions for interacting with the Gemini API.'''
 import sqlite3
+import os
 from google import genai
 import streamlit as st
 from utils import parse_comparisons_string_to_dict, chunk_list, parse_stringified_dict
@@ -62,8 +63,14 @@ def generate_word_analysis(word_list: list[str]) -> AnalysisResult:
     if not word_list:
         return AnalysisResult(analyses=[])
 
-    client = genai.Client(
-        api_key=st.session_state["parameters"].gemini_api_key)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        try:
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception:
+            pass
+
+    client = genai.Client(api_key=api_key)
 
     chunk_generator = chunk_list(
         word_list, st.session_state["parameters"].chunk_size)
@@ -133,8 +140,14 @@ def generate_recall_prompts(word_list: list[str]) -> HerinneringsTest:
     if not word_list:
         return HerinneringsTest(gegenereerde_prompts=[])
 
-    client = genai.Client(
-        api_key=st.session_state["parameters"].gemini_api_key)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        try:
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception as e:
+            print(f"Fout bij het ophalen van de Gemini API-sleutel: {e}")
+
+    client = genai.Client(api_key=api_key)
 
     chunk_generator = chunk_list(
         word_list, st.session_state["parameters"].recall_chunk_size)
