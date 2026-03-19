@@ -1,6 +1,6 @@
 '''Recall tab'''
 import streamlit as st
-from tabs.recall.recall_tab_widgets import (
+from .recall_tab_widgets import (
     display_widgets_recall_tab, present_prompts_for_recall, word_analysis_material,
     remember_buttons,
 )

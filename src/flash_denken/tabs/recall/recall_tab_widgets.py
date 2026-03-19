@@ -1,13 +1,13 @@
 '''This module contains the widgets for the recall tab in the Streamlit app.'''
 from PIL import Image
 import streamlit as st
-from db_operations import (
+from flash_denken.db_operations import (
     load_word_analyses_by_ids, load_n_prompts_for_words,
     load_user_media,
 )
-from ebisu_tools import calculate_all_recall_probabilities_from_db, update_ebisu_parameters_in_db
-from utils import wrap_around_index, categorize_content
-from html_generation import generate_prompt_card_html, embed_video, generate_word_html_design
+from flash_denken.ebisu_tools import calculate_all_recall_probabilities_from_db, update_ebisu_parameters_in_db
+from flash_denken.utils import wrap_around_index, categorize_content
+from flash_denken.html_generation import generate_prompt_card_html, embed_video, generate_word_html_design
 
 
 def recall_prob_threshold_input():

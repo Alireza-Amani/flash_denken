@@ -132,12 +132,12 @@ import pandas as pd
 from pandas import DataFrame
 import pydantic
 import streamlit as st
-from gemini import post_process_analysis
-from output_models import TermPrompts, EnkelePrompt
+from .gemini import post_process_analysis
+from .output_models import TermPrompts, EnkelePrompt
 
 # This is a forward reference to avoid circular imports if AnalysisResult
 # if TYPE_CHECKING:
-from output_models import (
+from .output_models import (
     AnalysisResult, WordAnalysis, ThoughtScenario,
     CoreMeaning, ContextualInfo, RelationalWeb, Physicality, StringToStringDict,
 )

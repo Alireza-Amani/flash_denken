@@ -2,7 +2,7 @@
 import re
 import html
 from typing import List, Optional, Callable
-from output_models import (
+from .output_models import (
     WordAnalysis, CoreMeaning, ContextualInfo, RelationalWeb, Physicality,
     ThoughtScenario, EnkelePrompt
 )

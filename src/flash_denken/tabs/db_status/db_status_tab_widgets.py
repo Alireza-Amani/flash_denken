@@ -1,7 +1,7 @@
 '''The widgets for the "Database Status" tab.'''
 
 import streamlit as st
-from db_operations import remove_words_by_ids, remove_words_by_terms
+from flash_denken.db_operations import remove_words_by_ids, remove_words_by_terms
 
 # a button to trigger showing the dataframes
 

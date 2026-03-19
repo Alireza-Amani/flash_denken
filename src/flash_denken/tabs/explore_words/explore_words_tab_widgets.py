@@ -1,6 +1,6 @@
 
 import streamlit as st
-from db_operations import (
+from flash_denken.db_operations import (
     get_ids_given_words, load_word_analyses_by_ids, load_thought_scenarios_by_word_id,
     save_thought_scenarios_by_word_id, load_user_images_by_word_id, save_user_images_by_word_id,
 )

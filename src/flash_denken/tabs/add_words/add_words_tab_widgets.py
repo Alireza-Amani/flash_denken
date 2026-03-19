@@ -1,11 +1,11 @@
 '''The widgets for the "Add Words" tab.'''
 
 import streamlit as st
-from gemini import generate_word_analysis, generate_recall_prompts
-from db_operations import (
+from flash_denken.gemini import generate_word_analysis, generate_recall_prompts
+from flash_denken.db_operations import (
     save_analysis_result_to_db, save_term_prompts_to_db, find_word_without_prompts,
 )
-from utils import get_unique_new_words, parse_words_input
+from flash_denken.utils import get_unique_new_words, parse_words_input
 
 
 def word_input_addtab():

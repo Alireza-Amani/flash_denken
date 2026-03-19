@@ -3,8 +3,8 @@ import sqlite3
 import os
 from google import genai
 import streamlit as st
-from utils import parse_comparisons_string_to_dict, chunk_list, parse_stringified_dict
-from output_models import (
+from .utils import parse_comparisons_string_to_dict, chunk_list, parse_stringified_dict
+from .output_models import (
     AnalysisResult, StringToStringDict, HerinneringsTest, TermPrompts
 )
 

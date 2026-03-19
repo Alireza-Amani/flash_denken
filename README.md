@@ -32,30 +32,38 @@
 
 ## 📂 Codebase Hierarchy & Guide
 
-This outline explains the role of each file in the system architecture.
+The project follows a modern `src` layout for clean separation between source code and project root files.
 
-### 1. Core Data Structures (`output_models.py`)
-Defines the "nervous system" of the app.
-*   **`output_models.py`**: Contains Pydantic models (`WordAnalysis`, `ThoughtScenario`, `HerinneringsTest`) that define the data shape. This file ensures that the interface between the Python backend and the Gemini LLM is strictly typed.
+### 1. Application Root
+- **`app.py`**: The main entry point for the Streamlit application.
+- **`create_db.py`**: A one-time script to initialize the SQLite database and its schema.
+- **`requirements.txt`**: Lists all project dependencies.
+- **`README.md`**: You are here!
 
-### 2. AI & Generation (`gemini.py`, `instructions.py`)
-Handles the "brain" of the app.
-*   **`gemini.py`**: The interface layer for the Google GenAI SDK. It handles request chunking, API calls, and—crucially—parsing the raw JSON responses into valid Pydantic objects.
-*   **`instructions.py`**: Contains the "System Instructions" (`WORD_ANALYSIS`, `RECALL_GENERATION`). These are detailed prompts that instruct the LLM on pedagogical goals (e.g., "Force Active Recall", "Simulate Internal Monologue").
+### 2. Main Source (`src/flash_denken/`)
+This directory contains the core logic of the application.
 
-### 3. Persistence Layer (`db_operations.py`, `create_db.py`)
-Manages long-term memory.
-*   **`create_db.py`**: Initializes the SQLite schema. Creates tables for `words`, `thought_scenarios`, `practice_sessions`, `user_media`, and `recall_prompts`.
-*   **`db_operations.py`**: A comprehensive library of CRUD (Create, Read, Update, Delete) operations. It handles complex logic like "upserting" words to prevent duplicates and managing the relationship between words and their generated prompts.
+#### 2.1. Configuration & State Management
+- **`parameters.py`**: A dataclass that holds all application-wide parameters, from API keys and model names to file paths and algorithm settings. It's the central configuration hub.
+- **`state_manager.py`**: Manages the Streamlit session state (`st.session_state`), ensuring all required variables are initialized correctly when the app starts.
 
-### 4. User Interface (`tabs/`, `html_generation.py`)
-The presentation layer.
-*   **`tabs/learning/learning_tab_widgets.py`**: Logic for the study interface. Contains widgets for browsing words, adding personal notes, and uploading images/videos.
-*   **`tabs/recall/recall_tab_widgets.py`**: Logic for the testing interface. Implements the review loop where users are presented with prompts based on their memory retention.
-*   **`html_generation.py`**: A dedicated styling engine that generates HTML/CSS for the word cards. It creates distinct visual themes (e.g., "Scholarly", "Neon Wave") to make learning visually engaging.
+#### 2.2. Core Data Models & AI Instructions
+- **`output_models.py`**: Defines the "nervous system" of the app. Contains all Pydantic models (`WordAnalysis`, `HerinneringsTest`, etc.) that enforce strict, predictable data structures for all data flowing through the application, especially from the AI.
+- **`instructions.py`**: Stores the large, detailed system prompts (`WORD_ANALYSIS`, `RECALL_GENERATION`) that instruct the Gemini LLM on its pedagogical goals and required output format.
 
-### 5. Utilities (`utils.py`)
-*   **`utils.py`**: Essential helper functions for string parsing, URL validation, YouTube link embedding, and list chunking.
+#### 2.3. AI, Spaced Repetition, and Persistence
+- **`gemini.py`**: The dedicated interface for the Google Gemini API. It handles making requests, managing API configurations, and parsing the JSON responses back into Pydantic objects.
+- **`db_operations.py`**: The persistence layer. A comprehensive library of CRUD (Create, Read, Update, Delete) functions for interacting with the SQLite database. It encapsulates all SQL logic.
+- **`ebisu_tools.py`**: Contains all logic related to the Ebisu spaced repetition algorithm. It includes functions to calculate recall probabilities and update the Ebisu parameters for each word after a practice session.
+
+#### 2.4. User Interface (UI)
+- **`html_generation.py`**: The presentation engine. This module is responsible for generating the rich, styled HTML and CSS used to display the word analysis cards and recall prompts, making the learning experience visually engaging.
+- **`tabs/`**: This sub-package contains the Python modules that build the different tabs in the Streamlit UI.
+    - `learning/learning_tab_widgets.py`: Contains all the widgets and logic for the "Learning" tab, where users study new words and add personal media.
+    - `recall/recall_tab_widgets.py`: Contains all widgets and logic for the "Recall" tab, which implements the spaced repetition testing loop.
+
+#### 2.5. Utilities
+- **`utils.py`**: A collection of essential helper functions used across the application, such as string parsers, URL validators, and list chunking tools.
 
 ---
 
@@ -69,7 +77,7 @@ The presentation layer.
 
 2.  **Install Dependencies**
     ```bash
-    pip install streamlit google-genai pydantic pandas pillow
+    pip install streamlit google-genai pydantic pandas pillow ebisu
     ```
 
 3.  **Initialize Database**
@@ -84,5 +92,5 @@ The presentation layer.
     streamlit run app.py
     ```
     *(Note: Ensure your Google Gemini API key is configured within the application settings or environment variables).*
-```
-(This README is co-written by me and Gemini
+
+(This README is co-written by me and Gemini)

@@ -3,8 +3,9 @@ from dataclasses import dataclass
 import os
 import streamlit as st
 from google import genai
-from utils import assert_model_presence
-from instructions import WORD_ANALYSIS, RECALL_GENERATION
+from dotenv import load_dotenv
+from .utils import assert_model_presence
+from .instructions import WORD_ANALYSIS, RECALL_GENERATION
 
 
 @dataclass
@@ -54,6 +55,7 @@ class Parameters:
             raise FileNotFoundError(f"Database file not found: {self.db_path}")
 
         if not self.gemini_api_key:
+            load_dotenv(override=True)
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
             if not self.gemini_api_key:
                 try:

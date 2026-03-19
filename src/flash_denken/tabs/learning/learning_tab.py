@@ -2,8 +2,8 @@
 from PIL import Image
 import io
 import streamlit as st
-from html_generation import generate_word_html_design, embed_video
-from tabs.learning.learning_tab_widgets import (
+from flash_denken.html_generation import generate_word_html_design, embed_video
+from .learning_tab_widgets import (
     input_number_of_words_to_learn, start_learning_session_button,
     sample_words_to_learn_button, end_learning_session_button,
     next_word_button, previous_word_button,

@@ -1,10 +1,10 @@
 '''Initializes the state variables for the Streamlit app.'''
 
 from pandas import DataFrame
-from parameters import Parameters
-from db_operations import get_words_already_in_db
+from .parameters import Parameters
+from .db_operations import get_words_already_in_db
 import streamlit as st
-from output_models import HerinneringsTest, AnalysisResult
+from .output_models import HerinneringsTest, AnalysisResult
 
 stvar_list = [
     "new_words_to_generate_list",  # List[str]

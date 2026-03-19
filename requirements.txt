@@ -1,0 +1,7 @@
+streamlit
+pandas
+google-generativeai
+ebisu
+pydantic
+python-dotenv
+requests

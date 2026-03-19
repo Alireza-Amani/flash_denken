@@ -1,6 +1,6 @@
 '''The "Add Words" tab.'''
 import streamlit as st
-from tabs.add_words.add_words_tab_widgets import (
+from .add_words_tab_widgets import (
     word_input_addtab, generate_analyses_button_addtab,
     save_analyses_to_db_button_addtab,
     generate_recall_prompts_button_addtab, save_recall_prompts_to_db_button_addtab,

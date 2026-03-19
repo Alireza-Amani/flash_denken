@@ -1,11 +1,11 @@
 '''The "Database Status" tab.'''
 
 import streamlit as st
-from db_operations import get_words_practice_tables
-from tabs.db_status.db_status_tab_widgets import (
+from flash_denken.db_operations import get_words_practice_tables
+from .db_status_tab_widgets import (
     show_dataframes_button_db_status_tab, show_danger_zone
 )
-from ebisu_tools import calculate_all_recall_probabilities_from_db
+from flash_denken.ebisu_tools import calculate_all_recall_probabilities_from_db
 
 
 def render_db_status_tab():

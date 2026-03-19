@@ -2,17 +2,17 @@
 import io
 from PIL import Image
 import streamlit as st
-from db_operations import (
+from flash_denken.db_operations import (
     save_user_thought_scenario, sample_words_to_learn, save_user_media_to_db,
     load_word_analyses_by_ids,
     get_ids_given_words, load_user_media, mark_word_as_learned,
 )
-from output_models import ThoughtScenario
-from utils import (
+from flash_denken.output_models import ThoughtScenario
+from flash_denken.utils import (
     wrap_around_index, categorize_content, is_valid_video_url,
     prepare_youtube_url_for_streamlit, sanitize_filename,
 )
-from html_generation import embed_video
+from flash_denken.html_generation import embed_video
 
 
 def next_prev_callback(direction: int):
