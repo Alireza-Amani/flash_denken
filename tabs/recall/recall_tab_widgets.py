@@ -72,7 +72,13 @@ def select_recall_words_callback():
     recall_prob_threshold = st.session_state["recall_prob_threshold_key"] / 100.0
     selected_ids = st.session_state.recall_probabilities_df[
         st.session_state.recall_probabilities_df["recall_probability"] <= recall_prob_threshold
-    ].head(
+    ]
+
+    # sort by `recall_probability` in ascending order
+    selected_ids = selected_ids.sort_values(
+        by="recall_probability", ascending=True
+    )
+    selected_ids = selected_ids.head(
         st.session_state["number_of_words_to_recall_key"]
     )["word_id"].tolist()
 

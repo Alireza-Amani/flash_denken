@@ -9,6 +9,7 @@ from tabs.learning.learning_tab_widgets import (
     next_word_button, previous_word_button,
     mark_word_learned_button, display_user_videos, user_personalization_widgets,
     get_user_media, display_user_images,
+    add_words_to_learning_list,
 
 )
 
@@ -16,6 +17,8 @@ from tabs.learning.learning_tab_widgets import (
 def render_learning_tab():
     """Renders the "Learning" tab."""
 
+    add_words_to_learning_list()
+    st.divider()
     input_number_of_words_to_learn()
     sample_words_to_learn_button()
     start_learning_session_button()

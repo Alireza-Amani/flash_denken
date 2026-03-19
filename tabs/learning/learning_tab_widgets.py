@@ -562,3 +562,43 @@ def user_personalization_widgets():
         if st.session_state.get("video_urls_list"):
             for video_url in st.session_state["video_urls_list"]:
                 st.markdown(embed_video(video_url), unsafe_allow_html=True)
+
+
+# i wanna add some widgets to make it possible to manually add words to the learning list
+# lets add an input field for the word ids
+def add_words_to_learning_list():
+    """
+    Renders an input field to add words to the learning list.
+    This function creates an input field where the user can enter word IDs to be added to the learning list.
+    """
+    word_ids = st.text_input(
+        "Voeg woorden toe aan de leer lijst (IDs gescheiden door komma's)",
+        value="",
+        key="add_words_to_learning_list_input_key"
+    )
+
+    if word_ids:
+        ids = [int(id_.strip())
+               for id_ in word_ids.split(",") if id_.strip().isdigit()]
+        if ids:
+            # get the word analyses for these IDs
+            word_analyses = load_word_analyses_by_ids(ids)
+            if word_analyses:
+                st.session_state["word_analyses_to_learn_list"].extend(
+                    word_analyses)
+
+                st.session_state["words_in_learning_status_dict"].update(
+                    get_ids_given_words([wa.word for wa in word_analyses])
+                )
+
+                # now add word analyses to the dict and its corresponding IDs
+                for word_analysis in word_analyses:
+                    for id_ in st.session_state["words_in_learning_status_dict"]:
+                        if st.session_state["words_in_learning_status_dict"][id_]["word"] == word_analysis.word:
+                            st.session_state["words_in_learning_status_dict"][id_]["word_analysis"] = word_analysis
+                print(
+                    f"Words added to learning list: {', '.join([wa.word for wa in word_analyses])}")
+            else:
+                print("No valid words found for the provided IDs.")
+    else:
+        print("No word IDs provided.")
