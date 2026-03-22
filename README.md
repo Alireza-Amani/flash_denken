@@ -67,6 +67,7 @@ This directory contains the core logic of the application.
 
 ---
 
+
 ## 🛠️ Installation & Usage
 
 1.  **Clone the repository**
@@ -93,4 +94,71 @@ This directory contains the core logic of the application.
     ```
     *(Note: Ensure your Google Gemini API key is configured within the application settings or environment variables).*
 
-(This README is co-written by me and Gemini)
+
+## Database Schema
+```mermaid
+erDiagram
+    words ||--o{ thought_scenarios : "has"
+    words ||--o{ practice_sessions : "has"
+    words ||--o{ user_media : "has"
+    words ||--o{ recall_prompts : "has"
+
+    words {
+        INTEGER id PK
+        TEXT word UK
+        TEXT part_of_speech
+        TEXT definition
+        TEXT article
+        TEXT simple_past
+        TEXT past_participle
+        TEXT pronunciation_ipa
+        TEXT nuance
+        TEXT formality
+        TEXT typical_usage
+        TEXT common_mistake
+        TEXT translations_json
+        TEXT comparisons_json
+        TEXT synonyms_json
+        TEXT antonyms_json
+        TEXT collocations_json
+        TEXT learned_at
+        REAL ebisu_alpha
+        REAL ebisu_beta
+        REAL ebisu_halflife
+        TEXT ebisu_last_tested_at
+        TIMESTAMP created_at
+    }
+
+    thought_scenarios {
+        INTEGER id PK
+        INTEGER word_id FK
+        TEXT title
+        TEXT situation
+        TEXT internal_monologue
+        TEXT expression
+        BOOLEAN is_user_created
+    }
+
+    practice_sessions {
+        INTEGER id PK
+        INTEGER word_id FK
+        TIMESTAMP session_date
+        INTEGER success
+    }
+
+    user_media {
+        INTEGER id PK
+        INTEGER word_id FK
+        TEXT content_type
+        TEXT content_url
+        TEXT description
+    }
+
+    recall_prompts {
+        INTEGER id PK
+        INTEGER word_id FK
+        TEXT category
+        TEXT prompt_json
+        TIMESTAMP last_used_at
+    }
+```
