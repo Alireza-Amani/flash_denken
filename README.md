@@ -81,7 +81,7 @@ This directory contains the core logic of the application.
     ```
 
 3.  **Initialize Database**
-    Creates the local SQLite database file.
+    Creates the local SQLite database file. Make sure you have a 'data/' directory in the project root for the database file.
     ```bash
     python create_db.py
     ```
