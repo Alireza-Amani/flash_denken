@@ -81,6 +81,9 @@ This directory contains the core logic of the application.
     pip install -r requirements.txt
     ```
 
+    You also need to have a Gemini API key stored as an environment variable (`GEMINI_API_KEY`).
+
+
 3.  **Initialize Database**
     Creates the local SQLite database file. Make sure you have a 'data/' directory in the project root for the database file.
     ```bash
