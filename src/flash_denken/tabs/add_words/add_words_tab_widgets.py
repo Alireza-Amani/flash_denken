@@ -74,11 +74,11 @@ def generate_analyses_button_addtab():
     is_disabled = not st.session_state.get("new_words_to_generate_list", [])
 
     st.button(
-        "Genereer en sla analyses op",
+        "Genereer analyses",
         on_click=generate_analyses_button_callback,
         disabled=is_disabled,
         icon=":material/smart_toy:",
-        help="Genereer analyses voor de nieuwe woorden en sla ze op in de database.",
+        help="Genereer analyses voor de nieuwe woorden.",
         type="primary",
         use_container_width=True,
         key="generate_analyses_button_addtab_key"
@@ -132,11 +132,11 @@ def generate_recall_prompts_button_addtab():
     )
 
     st.button(
-        "Genereer en sla herinneringsprompts op",
+        "Genereer herinneringsprompts",
         on_click=generate_recall_prompts_button_callback,
         disabled=is_disabled,
         icon=":material/smart_toy:",
-        help="Genereer herinneringsprompts voor de nieuwe woorden en sla ze op in de database.",
+        help="Genereer herinneringsprompts voor de nieuwe woorden.",
         type="primary",
         use_container_width=True,
         key="generate_recall_prompts_button_addtab_key"
