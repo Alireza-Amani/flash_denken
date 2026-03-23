@@ -55,13 +55,11 @@ class Parameters:
             raise FileNotFoundError(f"Database file not found: {self.db_path}")
 
         if not self.gemini_api_key:
-            load_dotenv(override=True)
-            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-            if not self.gemini_api_key:
-                try:
-                    self.gemini_api_key = st.secrets.get("GEMINI_API_KEY")
-                except Exception:
-                    pass
+            try:
+                load_dotenv(override=True)
+                self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+            except Exception as e:
+                raise Exception("No Gemini API key found") from e
 
         # ensure the API key is valid
         try:
