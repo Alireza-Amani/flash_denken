@@ -78,7 +78,7 @@ This directory contains the core logic of the application.
 
 2.  **Install Dependencies**
     ```bash
-    pip install streamlit google-genai pydantic pandas pillow ebisu
+    pip install -r requirements.txt
     ```
 
 3.  **Initialize Database**
