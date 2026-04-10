@@ -1,8 +1,25 @@
-# Flash Denken 🧠🇳🇱
+# Flash Denken
 
-A Dutch vocabulary learning app that uses AI and spaced repetition to move beyond rote memorization toward genuine fluency.
+> Dutch vocabulary learning powered by AI and spaced repetition.
 
-> **Stack:** Python · Streamlit · Google Gemini · Ebisu · SQLite
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-app-FF4B4B?logo=streamlit&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?logo=google&logoColor=white)
+![License](https://img.shields.io/badge/License-PolyForm_Personal-lightgrey)
+
+---
+
+## Overview
+
+Flash Denken is a personal Dutch vocabulary tool that moves beyond rote memorization. Words are learned in context through AI-generated thought scenarios and reviewed at the optimal moment using a Bayesian spaced-repetition algorithm.
+
+## Built With
+
+- [Python 3.9+](https://www.python.org/)
+- [Streamlit](https://streamlit.io/) — UI framework
+- [Google Gemini](https://ai.google.dev/) — linguistic analysis & scenario generation
+- [Ebisu](https://fasiha.github.io/ebisu/) — Bayesian spaced repetition
+- [SQLite](https://www.sqlite.org/) — local persistence
 
 ---
 
@@ -154,4 +171,4 @@ erDiagram
 
 ## License
 
-See [LICENSE](LICENSE).
+Distributed under the [PolyForm Personal License 1.0.0](LICENSE) — personal use only.
